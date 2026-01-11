@@ -85,15 +85,68 @@ export const clearAllData = (): void => {
   });
 };
 
+// Format start position to readable text
+const formatStartPosition = (pos: string): string => {
+  const positions: Record<string, string> = {
+    'blue-classifier': 'Blue Against Classifier',
+    'blue-launch': 'Blue Launch Zone',
+    'red-classifier': 'Red Against Classifier',
+    'red-launch': 'Red Launch Zone',
+  };
+  return positions[pos] || pos || 'Not Set';
+};
+
+// Format entry to human-readable format
+const formatEntryForExport = (entry: any) => ({
+  'Team Number': entry.teamNumber,
+  'Match Number': entry.matchNumber,
+  'Alliance': entry.alliance === 'red' ? 'Red Alliance' : 'Blue Alliance',
+  'Scouted By': entry.username,
+  'Date': new Date(entry.timestamp).toLocaleDateString(),
+  'Time': new Date(entry.timestamp).toLocaleTimeString(),
+  
+  'AUTONOMOUS': '---',
+  'Starting Position': formatStartPosition(entry.auto?.startPosition),
+  'Leave Robots': entry.auto?.leaveRobots || 0,
+  'Classified Artifacts (Auto)': entry.auto?.classifiedArtifacts || 0,
+  'Overflow Artifacts (Auto)': entry.auto?.overflowArtifacts || 0,
+  'Pattern Matches (Auto)': entry.auto?.patternMatches || 0,
+  'Auto Score': entry.scores?.autoScore || 0,
+  
+  'TELE-OP': '---',
+  'Classified Artifacts (Tele-Op)': entry.teleop?.classifiedArtifacts || 0,
+  'Overflow Artifacts (Tele-Op)': entry.teleop?.overflowArtifacts || 0,
+  'Depot Artifacts': entry.teleop?.depotArtifacts || 0,
+  'Pattern Matches (Tele-Op)': entry.teleop?.patternMatches || 0,
+  'Cycles Completed': entry.teleop?.cyclesCompleted || 0,
+  'Tele-Op Score': entry.scores?.teleopScore || 0,
+  
+  'ENDGAME': '---',
+  'Base Partial Returns': entry.endgame?.basePartialRobots || 0,
+  'Base Full Returns': entry.endgame?.baseFullRobots || 0,
+  'Endgame Score': entry.scores?.endgameScore || 0,
+  
+  'TOTAL SCORE': entry.scores?.totalScore || 0,
+  
+  'RATINGS': '---',
+  'Defense Rating': `${entry.defenseRating || 0} / 5`,
+  'Speed Rating': `${entry.speedRating || 0} / 5`,
+  'Driver Skill': `${entry.driverSkill || 0} / 5`,
+  'Reliability': `${entry.reliability || 0} / 5`,
+  
+  'Notes': entry.notes || 'No notes',
+});
+
 // Export data as JSON
 export const exportDataAsJSON = (): void => {
   const entries = getScoutingEntries();
-  const dataStr = JSON.stringify(entries, null, 2);
+  const formattedEntries = entries.map(formatEntryForExport);
+  const dataStr = JSON.stringify(formattedEntries, null, 2);
   const blob = new Blob([dataStr], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
   link.href = url;
-  link.download = `ftc-scouting-data-${new Date().toISOString().split('T')[0]}.json`;
+  link.download = `FTC Scouting Data - ${new Date().toLocaleDateString()}.json`;
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
@@ -142,8 +195,8 @@ export const exportDataAsCSV = (): void => {
   const rows = entries.map(entry => [
     entry.teamNumber,
     entry.matchNumber,
-    entry.alliance,
-    entry.auto?.startPosition || '',
+    entry.alliance === 'red' ? 'Red Alliance' : 'Blue Alliance',
+    formatStartPosition(entry.auto?.startPosition || ''),
     entry.auto?.leaveRobots || 0,
     entry.auto?.classifiedArtifacts || 0,
     entry.auto?.overflowArtifacts || 0,
@@ -173,7 +226,7 @@ export const exportDataAsCSV = (): void => {
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
   link.href = url;
-  link.download = `ftc-scouting-data-${new Date().toISOString().split('T')[0]}.csv`;
+  link.download = `FTC Scouting Data - ${new Date().toLocaleDateString()}.csv`;
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
@@ -213,12 +266,13 @@ export const exportUserDataAsJSON = (userId: string, username: string): void => 
     alert('No data to export for this user');
     return;
   }
-  const dataStr = JSON.stringify(entries, null, 2);
+  const formattedEntries = entries.map(formatEntryForExport);
+  const dataStr = JSON.stringify(formattedEntries, null, 2);
   const blob = new Blob([dataStr], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
   link.href = url;
-  link.download = `ftc-scouting-${username}-${new Date().toISOString().split('T')[0]}.json`;
+  link.download = `${username}'s Scouting Data - ${new Date().toLocaleDateString()}.json`;
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
@@ -264,8 +318,8 @@ export const exportUserDataAsCSV = (userId: string, username: string): void => {
   const rows = entries.map(entry => [
     entry.teamNumber,
     entry.matchNumber,
-    entry.alliance,
-    entry.auto?.startPosition || '',
+    entry.alliance === 'red' ? 'Red Alliance' : 'Blue Alliance',
+    formatStartPosition(entry.auto?.startPosition || ''),
     entry.auto?.leaveRobots || 0,
     entry.auto?.classifiedArtifacts || 0,
     entry.auto?.overflowArtifacts || 0,
@@ -281,12 +335,12 @@ export const exportUserDataAsCSV = (userId: string, username: string): void => {
     entry.scores?.teleopScore || 0,
     entry.scores?.endgameScore || 0,
     entry.scores?.totalScore || 0,
-    entry.defenseRating || 0,
-    entry.speedRating || 0,
-    entry.driverSkill || 0,
-    entry.reliability || 0,
-    `"${(entry.notes || '').replace(/"/g, '""')}"`,
-    entry.timestamp || ''
+    `${entry.defenseRating || 0}/5`,
+    `${entry.speedRating || 0}/5`,
+    `${entry.driverSkill || 0}/5`,
+    `${entry.reliability || 0}/5`,
+    `"${(entry.notes || 'No notes').replace(/"/g, '""')}"`,
+    new Date(entry.timestamp).toLocaleString()
   ]);
 
   const csvContent = [headers.join(','), ...rows.map(row => row.join(','))].join('\n');
@@ -294,7 +348,7 @@ export const exportUserDataAsCSV = (userId: string, username: string): void => {
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
   link.href = url;
-  link.download = `ftc-scouting-${username}-${new Date().toISOString().split('T')[0]}.csv`;
+  link.download = `${username}'s Scouting Data - ${new Date().toLocaleDateString()}.csv`;
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);

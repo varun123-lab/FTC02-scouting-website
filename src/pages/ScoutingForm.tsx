@@ -283,10 +283,10 @@ const ScoutingForm: React.FC = () => {
                   )}
                 </div>
               </div>
-              <Counter value={formData.auto.leaveRobots} onChange={(val) => setFormData({ ...formData, auto: { ...formData.auto, leaveRobots: val } })} min={0} max={2} label="Robots Leave Starting Area" points="3 pts each" />
+              <Counter value={formData.auto.leaveRobots} onChange={(val) => setFormData({ ...formData, auto: { ...formData.auto, leaveRobots: val } })} min={0} max={1000} label="Robots Leave Starting Area" points="3 pts each" />
               <Counter value={formData.auto.classifiedArtifacts} onChange={(val) => setFormData({ ...formData, auto: { ...formData.auto, classifiedArtifacts: val } })} label="Artifacts Classified" points="3 pts each" />
               <Counter value={formData.auto.overflowArtifacts} onChange={(val) => setFormData({ ...formData, auto: { ...formData.auto, overflowArtifacts: val } })} label="Artifacts in Overflow" points="1 pt each" />
-              <Counter value={formData.auto.patternMatches} onChange={(val) => setFormData({ ...formData, auto: { ...formData.auto, patternMatches: val } })} min={0} max={9} label="Pattern Matches (MOTIF)" points="2 pts each" />
+              <Counter value={formData.auto.patternMatches} onChange={(val) => setFormData({ ...formData, auto: { ...formData.auto, patternMatches: val } })} min={0} max={1000} label="Pattern Matches (MOTIF)" points="2 pts each" />
               <button type="button" onClick={() => setShowAutoPath(true)} className="w-full py-3 bg-indigo-100 dark:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300 rounded-lg font-medium flex items-center justify-center gap-2">
                 <Pencil size={18} />Draw Auto Path
               </button>
@@ -304,7 +304,7 @@ const ScoutingForm: React.FC = () => {
               <Counter value={formData.teleop.classifiedArtifacts} onChange={(val) => setFormData({ ...formData, teleop: { ...formData.teleop, classifiedArtifacts: val } })} label="Artifacts Classified" points="3 pts each" />
               <Counter value={formData.teleop.overflowArtifacts} onChange={(val) => setFormData({ ...formData, teleop: { ...formData.teleop, overflowArtifacts: val } })} label="Artifacts in Overflow" points="1 pt each" />
               <Counter value={formData.teleop.depotArtifacts} onChange={(val) => setFormData({ ...formData, teleop: { ...formData.teleop, depotArtifacts: val } })} label="Depot Artifacts (at end)" points="1 pt each" />
-              <Counter value={formData.teleop.patternMatches} onChange={(val) => setFormData({ ...formData, teleop: { ...formData.teleop, patternMatches: val } })} min={0} max={9} label="Pattern Matches (MOTIF)" points="2 pts each" />
+              <Counter value={formData.teleop.patternMatches} onChange={(val) => setFormData({ ...formData, teleop: { ...formData.teleop, patternMatches: val } })} min={0} max={1000} label="Pattern Matches (MOTIF)" points="2 pts each" />
               <Counter value={formData.teleop.cyclesCompleted} onChange={(val) => setFormData({ ...formData, teleop: { ...formData.teleop, cyclesCompleted: val } })} label="Cycles Completed" points="(efficiency tracking)" />
             </div>
           )}
@@ -317,8 +317,8 @@ const ScoutingForm: React.FC = () => {
           </button>
           {expandedSections.endgame && (
             <div className="p-4 space-y-4">
-              <Counter value={formData.endgame.baseFullRobots} onChange={(val) => { const maxPartial = 2 - val; setFormData({ ...formData, endgame: { ...formData.endgame, baseFullRobots: val, basePartialRobots: Math.min(formData.endgame.basePartialRobots, maxPartial) } }); }} min={0} max={2} label="Robots Fully in Base" points="10 pts each (+10 bonus if both)" />
-              <Counter value={formData.endgame.basePartialRobots} onChange={(val) => setFormData({ ...formData, endgame: { ...formData.endgame, basePartialRobots: val } })} min={0} max={2 - formData.endgame.baseFullRobots} label="Robots Partially in Base" points="5 pts each" />
+              <Counter value={formData.endgame.baseFullRobots} onChange={(val) => setFormData({ ...formData, endgame: { ...formData.endgame, baseFullRobots: val } })} min={0} max={1000} label="Robots Fully in Base" points="10 pts each (+10 bonus if both)" />
+              <Counter value={formData.endgame.basePartialRobots} onChange={(val) => setFormData({ ...formData, endgame: { ...formData.endgame, basePartialRobots: val } })} min={0} max={1000} label="Robots Partially in Base" points="5 pts each" />
               {formData.endgame.baseFullRobots === 2 && (
                 <div className="bg-yellow-100 dark:bg-yellow-900/30 rounded-lg p-3 text-center">
                   <span className="text-yellow-700 dark:text-yellow-300 font-medium">🎉 +10 Bonus for Both Robots Fully Returned!</span>

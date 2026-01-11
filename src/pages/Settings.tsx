@@ -2,8 +2,8 @@ import React, { useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
-import { LogOut, Moon, Sun, User, Database, Info, Download, Upload, FileJson, FileSpreadsheet, TrendingUp, Target, Users } from 'lucide-react';
-import { exportDataAsJSON, exportDataAsCSV, importDataFromJSON, getScoutingEntries, getEntriesByUser, exportUserDataAsJSON, exportUserDataAsCSV, getUserStats } from '../utils/storage';
+import { LogOut, Moon, Sun, User, Database, Info, Download, Upload, FileJson, FileSpreadsheet, FileText, TrendingUp, Target, Users } from 'lucide-react';
+import { exportDataAsJSON, exportDataAsCSV, exportDataAsWord, importDataFromJSON, getScoutingEntries, getEntriesByUser, exportUserDataAsJSON, exportUserDataAsCSV, exportUserDataAsWord, getUserStats } from '../utils/storage';
 
 const Settings: React.FC = () => {
   const { user, logout } = useAuth();
@@ -25,6 +25,10 @@ const Settings: React.FC = () => {
     exportDataAsCSV();
   };
 
+  const handleExportWord = async () => {
+    await exportDataAsWord();
+  };
+
   const handleExportMyJSON = () => {
     if (user) {
       exportUserDataAsJSON(user.id, user.username);
@@ -34,6 +38,12 @@ const Settings: React.FC = () => {
   const handleExportMyCSV = () => {
     if (user) {
       exportUserDataAsCSV(user.id, user.username);
+    }
+  };
+
+  const handleExportMyWord = async () => {
+    if (user) {
+      await exportUserDataAsWord(user.id, user.username);
     }
   };
 
@@ -190,39 +200,53 @@ const Settings: React.FC = () => {
               <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3 flex items-center gap-2">
                 <Download className="w-4 h-4" /> Export My Entries Only
               </p>
-              <div className="grid grid-cols-2 gap-2 mb-4">
+              <div className="grid grid-cols-3 gap-2 mb-4">
+                <button
+                  onClick={handleExportMyWord}
+                  className="flex items-center justify-center gap-2 px-3 py-3 bg-indigo-50 dark:bg-indigo-900/20 hover:bg-indigo-100 dark:hover:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400 rounded-lg font-medium transition-colors border border-indigo-200 dark:border-indigo-800"
+                >
+                  <FileText className="w-5 h-5" />
+                  Word
+                </button>
                 <button
                   onClick={handleExportMyCSV}
-                  className="flex items-center justify-center gap-2 px-4 py-3 bg-primary-50 dark:bg-primary-900/20 hover:bg-primary-100 dark:hover:bg-primary-900/30 text-primary-700 dark:text-primary-400 rounded-lg font-medium transition-colors border border-primary-200 dark:border-primary-800"
+                  className="flex items-center justify-center gap-2 px-3 py-3 bg-primary-50 dark:bg-primary-900/20 hover:bg-primary-100 dark:hover:bg-primary-900/30 text-primary-700 dark:text-primary-400 rounded-lg font-medium transition-colors border border-primary-200 dark:border-primary-800"
                 >
                   <FileSpreadsheet className="w-5 h-5" />
-                  My CSV
+                  CSV
                 </button>
                 <button
                   onClick={handleExportMyJSON}
-                  className="flex items-center justify-center gap-2 px-4 py-3 bg-primary-50 dark:bg-primary-900/20 hover:bg-primary-100 dark:hover:bg-primary-900/30 text-primary-700 dark:text-primary-400 rounded-lg font-medium transition-colors border border-primary-200 dark:border-primary-800"
+                  className="flex items-center justify-center gap-2 px-3 py-3 bg-primary-50 dark:bg-primary-900/20 hover:bg-primary-100 dark:hover:bg-primary-900/30 text-primary-700 dark:text-primary-400 rounded-lg font-medium transition-colors border border-primary-200 dark:border-primary-800"
                 >
                   <FileJson className="w-5 h-5" />
-                  My JSON
+                  JSON
                 </button>
               </div>
               <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3 flex items-center gap-2">
                 <Users className="w-4 h-4" /> Export All Entries
               </p>
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-3 gap-2">
+                <button
+                  onClick={handleExportWord}
+                  className="flex items-center justify-center gap-2 px-3 py-3 bg-indigo-50 dark:bg-indigo-900/20 hover:bg-indigo-100 dark:hover:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400 rounded-lg font-medium transition-colors border border-indigo-200 dark:border-indigo-800"
+                >
+                  <FileText className="w-5 h-5" />
+                  Word
+                </button>
                 <button
                   onClick={handleExportCSV}
-                  className="flex items-center justify-center gap-2 px-4 py-3 bg-green-50 dark:bg-green-900/20 hover:bg-green-100 dark:hover:bg-green-900/30 text-green-700 dark:text-green-400 rounded-lg font-medium transition-colors border border-green-200 dark:border-green-800"
+                  className="flex items-center justify-center gap-2 px-3 py-3 bg-green-50 dark:bg-green-900/20 hover:bg-green-100 dark:hover:bg-green-900/30 text-green-700 dark:text-green-400 rounded-lg font-medium transition-colors border border-green-200 dark:border-green-800"
                 >
                   <FileSpreadsheet className="w-5 h-5" />
-                  All CSV
+                  CSV
                 </button>
                 <button
                   onClick={handleExportJSON}
-                  className="flex items-center justify-center gap-2 px-4 py-3 bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/30 text-blue-700 dark:text-blue-400 rounded-lg font-medium transition-colors border border-blue-200 dark:border-blue-800"
+                  className="flex items-center justify-center gap-2 px-3 py-3 bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/30 text-blue-700 dark:text-blue-400 rounded-lg font-medium transition-colors border border-blue-200 dark:border-blue-800"
                 >
                   <FileJson className="w-5 h-5" />
-                  All JSON
+                  JSON
                 </button>
               </div>
             </div>

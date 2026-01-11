@@ -1,4 +1,6 @@
 // Local Storage utility functions
+import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType } from 'docx';
+import { saveAs } from 'file-saver';
 
 const STORAGE_KEYS = {
   USERS: 'ftc_users',
@@ -404,4 +406,379 @@ export const getUserStats = (userId: string) => {
     avgDefenseRating: Math.round((totalDefense / entries.length) * 10) / 10,
     avgSpeedRating: Math.round((totalSpeed / entries.length) * 10) / 10,
   };
+};
+
+// Helper function to create an entry document section
+const createEntrySection = (entry: any, index: number) => {
+  const sections: Paragraph[] = [];
+  
+  // Entry header
+  sections.push(
+    new Paragraph({
+      children: [
+        new TextRun({
+          text: `Entry #${index + 1}: Team ${entry.teamNumber} - Match ${entry.matchNumber}`,
+          bold: true,
+          size: 28,
+        }),
+      ],
+      heading: HeadingLevel.HEADING_2,
+      spacing: { before: 400, after: 200 },
+    })
+  );
+
+  // Basic info
+  sections.push(
+    new Paragraph({
+      children: [
+        new TextRun({ text: 'Alliance: ', bold: true }),
+        new TextRun({ text: entry.alliance === 'red' ? 'Red Alliance' : 'Blue Alliance' }),
+        new TextRun({ text: '  |  ' }),
+        new TextRun({ text: 'Scouted By: ', bold: true }),
+        new TextRun({ text: entry.username || 'Unknown' }),
+        new TextRun({ text: '  |  ' }),
+        new TextRun({ text: 'Date: ', bold: true }),
+        new TextRun({ text: new Date(entry.timestamp).toLocaleString() }),
+      ],
+      spacing: { after: 200 },
+    })
+  );
+
+  // Score summary
+  sections.push(
+    new Paragraph({
+      children: [
+        new TextRun({ text: '📊 SCORES: ', bold: true, size: 24 }),
+        new TextRun({ text: `Auto: ${entry.scores?.autoScore || 0}`, size: 24 }),
+        new TextRun({ text: '  |  ' }),
+        new TextRun({ text: `Tele-Op: ${entry.scores?.teleopScore || 0}`, size: 24 }),
+        new TextRun({ text: '  |  ' }),
+        new TextRun({ text: `Endgame: ${entry.scores?.endgameScore || 0}`, size: 24 }),
+        new TextRun({ text: '  |  ' }),
+        new TextRun({ text: `TOTAL: ${entry.scores?.totalScore || 0}`, bold: true, size: 24 }),
+      ],
+      spacing: { after: 200 },
+    })
+  );
+
+  // Autonomous Phase
+  sections.push(
+    new Paragraph({
+      children: [new TextRun({ text: '🤖 AUTONOMOUS PHASE', bold: true, size: 24 })],
+      spacing: { before: 200, after: 100 },
+    })
+  );
+  sections.push(
+    new Paragraph({
+      children: [
+        new TextRun({ text: `• Starting Position: ${formatStartPosition(entry.auto?.startPosition)}` }),
+      ],
+    })
+  );
+  sections.push(
+    new Paragraph({
+      children: [
+        new TextRun({ text: `• Leave Robots: ${entry.auto?.leaveRobots || 0}` }),
+      ],
+    })
+  );
+  sections.push(
+    new Paragraph({
+      children: [
+        new TextRun({ text: `• Classified Artifacts: ${entry.auto?.classifiedArtifacts || 0}` }),
+      ],
+    })
+  );
+  sections.push(
+    new Paragraph({
+      children: [
+        new TextRun({ text: `• Overflow Artifacts: ${entry.auto?.overflowArtifacts || 0}` }),
+      ],
+    })
+  );
+  sections.push(
+    new Paragraph({
+      children: [
+        new TextRun({ text: `• Pattern Matches (MOTIF): ${entry.auto?.patternMatches || 0}` }),
+      ],
+    })
+  );
+  sections.push(
+    new Paragraph({
+      children: [
+        new TextRun({ text: `• Auto Path Drawn: ${entry.auto?.autoPath ? 'Yes' : 'No'}` }),
+      ],
+    })
+  );
+  if (entry.auto?.pathNotes) {
+    sections.push(
+      new Paragraph({
+        children: [
+          new TextRun({ text: `• Path Notes: ${entry.auto.pathNotes}` }),
+        ],
+      })
+    );
+  }
+
+  // Tele-Op Phase
+  sections.push(
+    new Paragraph({
+      children: [new TextRun({ text: '🎮 TELE-OP PHASE', bold: true, size: 24 })],
+      spacing: { before: 200, after: 100 },
+    })
+  );
+  sections.push(
+    new Paragraph({
+      children: [
+        new TextRun({ text: `• Classified Artifacts: ${entry.teleop?.classifiedArtifacts || 0}` }),
+      ],
+    })
+  );
+  sections.push(
+    new Paragraph({
+      children: [
+        new TextRun({ text: `• Overflow Artifacts: ${entry.teleop?.overflowArtifacts || 0}` }),
+      ],
+    })
+  );
+  sections.push(
+    new Paragraph({
+      children: [
+        new TextRun({ text: `• Depot Artifacts: ${entry.teleop?.depotArtifacts || 0}` }),
+      ],
+    })
+  );
+  sections.push(
+    new Paragraph({
+      children: [
+        new TextRun({ text: `• Pattern Matches (MOTIF): ${entry.teleop?.patternMatches || 0}` }),
+      ],
+    })
+  );
+  sections.push(
+    new Paragraph({
+      children: [
+        new TextRun({ text: `• Cycles Completed: ${entry.teleop?.cyclesCompleted || 0}` }),
+      ],
+    })
+  );
+
+  // Endgame Phase
+  sections.push(
+    new Paragraph({
+      children: [new TextRun({ text: '🏁 ENDGAME PHASE', bold: true, size: 24 })],
+      spacing: { before: 200, after: 100 },
+    })
+  );
+  sections.push(
+    new Paragraph({
+      children: [
+        new TextRun({ text: `• Base Partial Returns: ${entry.endgame?.basePartialRobots || 0}` }),
+      ],
+    })
+  );
+  sections.push(
+    new Paragraph({
+      children: [
+        new TextRun({ text: `• Base Full Returns: ${entry.endgame?.baseFullRobots || 0}` }),
+      ],
+    })
+  );
+
+  // Ratings
+  sections.push(
+    new Paragraph({
+      children: [new TextRun({ text: '⭐ RATINGS', bold: true, size: 24 })],
+      spacing: { before: 200, after: 100 },
+    })
+  );
+  sections.push(
+    new Paragraph({
+      children: [
+        new TextRun({ text: `• Defense: ${entry.defenseRating || 0}/5  |  Speed: ${entry.speedRating || 0}/5  |  Driver Skill: ${entry.driverSkill || 0}/5  |  Reliability: ${entry.reliability || 0}/5` }),
+      ],
+    })
+  );
+
+  // Notes
+  if (entry.notes) {
+    sections.push(
+      new Paragraph({
+        children: [new TextRun({ text: '📝 NOTES', bold: true, size: 24 })],
+        spacing: { before: 200, after: 100 },
+      })
+    );
+    sections.push(
+      new Paragraph({
+        children: [new TextRun({ text: entry.notes })],
+      })
+    );
+  }
+
+  // Divider line
+  sections.push(
+    new Paragraph({
+      children: [new TextRun({ text: '─'.repeat(60) })],
+      spacing: { before: 300, after: 300 },
+    })
+  );
+
+  return sections;
+};
+
+// Export all data as Word document
+export const exportDataAsWord = async (): Promise<void> => {
+  const entries = getScoutingEntries();
+  if (entries.length === 0) {
+    alert('No data to export');
+    return;
+  }
+
+  const allSections: Paragraph[] = [];
+
+  // Title
+  allSections.push(
+    new Paragraph({
+      children: [
+        new TextRun({
+          text: 'FTC DECODE 2025-2026 Scouting Report',
+          bold: true,
+          size: 48,
+        }),
+      ],
+      heading: HeadingLevel.TITLE,
+      alignment: AlignmentType.CENTER,
+    })
+  );
+
+  // Subtitle with date
+  allSections.push(
+    new Paragraph({
+      children: [
+        new TextRun({
+          text: `Generated on ${new Date().toLocaleDateString()} at ${new Date().toLocaleTimeString()}`,
+          size: 24,
+          italics: true,
+        }),
+      ],
+      alignment: AlignmentType.CENTER,
+      spacing: { after: 400 },
+    })
+  );
+
+  // Summary stats
+  const uniqueTeams = new Set(entries.map(e => e.teamNumber)).size;
+  const avgScore = Math.round(entries.reduce((sum, e) => sum + (e.scores?.totalScore || 0), 0) / entries.length);
+  
+  allSections.push(
+    new Paragraph({
+      children: [
+        new TextRun({ text: '📊 SUMMARY: ', bold: true, size: 28 }),
+        new TextRun({ text: `${entries.length} Entries  |  ${uniqueTeams} Teams  |  Avg Score: ${avgScore}`, size: 28 }),
+      ],
+      spacing: { after: 400 },
+      alignment: AlignmentType.CENTER,
+    })
+  );
+
+  // Add all entries
+  entries.forEach((entry, index) => {
+    allSections.push(...createEntrySection(entry, index));
+  });
+
+  const doc = new Document({
+    sections: [
+      {
+        children: allSections,
+      },
+    ],
+  });
+
+  const blob = await Packer.toBlob(doc);
+  saveAs(blob, `FTC Scouting Report - ${new Date().toLocaleDateString()}.docx`);
+};
+
+// Export user-specific data as Word document
+export const exportUserDataAsWord = async (userId: string, username: string): Promise<void> => {
+  const entries = getEntriesByUser(userId);
+  if (entries.length === 0) {
+    alert('No data to export for this user');
+    return;
+  }
+
+  const allSections: Paragraph[] = [];
+
+  // Title
+  allSections.push(
+    new Paragraph({
+      children: [
+        new TextRun({
+          text: `${username}'s Scouting Report`,
+          bold: true,
+          size: 48,
+        }),
+      ],
+      heading: HeadingLevel.TITLE,
+      alignment: AlignmentType.CENTER,
+    })
+  );
+
+  // Subtitle
+  allSections.push(
+    new Paragraph({
+      children: [
+        new TextRun({
+          text: 'FTC DECODE 2025-2026 Season',
+          size: 28,
+        }),
+      ],
+      alignment: AlignmentType.CENTER,
+    })
+  );
+
+  allSections.push(
+    new Paragraph({
+      children: [
+        new TextRun({
+          text: `Generated on ${new Date().toLocaleDateString()} at ${new Date().toLocaleTimeString()}`,
+          size: 24,
+          italics: true,
+        }),
+      ],
+      alignment: AlignmentType.CENTER,
+      spacing: { after: 400 },
+    })
+  );
+
+  // Summary stats
+  const uniqueTeams = new Set(entries.map(e => e.teamNumber)).size;
+  const avgScore = Math.round(entries.reduce((sum, e) => sum + (e.scores?.totalScore || 0), 0) / entries.length);
+  const highScore = Math.max(...entries.map(e => e.scores?.totalScore || 0));
+  
+  allSections.push(
+    new Paragraph({
+      children: [
+        new TextRun({ text: '📊 MY STATS: ', bold: true, size: 28 }),
+        new TextRun({ text: `${entries.length} Entries  |  ${uniqueTeams} Teams  |  Avg: ${avgScore}  |  Best: ${highScore}`, size: 28 }),
+      ],
+      spacing: { after: 400 },
+      alignment: AlignmentType.CENTER,
+    })
+  );
+
+  // Add all entries
+  entries.forEach((entry, index) => {
+    allSections.push(...createEntrySection(entry, index));
+  });
+
+  const doc = new Document({
+    sections: [
+      {
+        children: allSections,
+      },
+    ],
+  });
+
+  const blob = await Packer.toBlob(doc);
+  saveAs(blob, `${username}'s Scouting Report - ${new Date().toLocaleDateString()}.docx`);
 };

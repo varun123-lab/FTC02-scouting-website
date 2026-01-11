@@ -1,8 +1,8 @@
-import React from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getEntriesByUser } from '../utils/storage';
 import { useAuth } from '../contexts/AuthContext';
-import { ArrowLeft, MapPin, Zap, Shield } from 'lucide-react';
+import { ArrowLeft, MapPin, Zap, Shield, Route } from 'lucide-react';
 
 const EntryDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -99,17 +99,33 @@ const EntryDetail: React.FC = () => {
             Autonomous Phase
           </h3>
           <div className="space-y-2 text-sm">
-            <DetailRow label="Start Position" value={entry.auto.startPosition} />
-            <DetailRow label="Artifacts Scored" value={(entry.auto as any).artifactsScored || 0} />
-            <DetailRow label="Path Drawn" value={(entry.auto as any).autoPath ? 'Yes' : 'No'} />
-            {(entry.auto as any).pathNotes && (
+            <DetailRow label="Start Position" value={formatStartPosition(entry.auto?.startPosition)} />
+            <DetailRow label="Leave Robots" value={entry.auto?.leaveRobots || 0} />
+            <DetailRow label="Classified Artifacts" value={entry.auto?.classifiedArtifacts || 0} />
+            <DetailRow label="Overflow Artifacts" value={entry.auto?.overflowArtifacts || 0} />
+            <DetailRow label="Pattern Matches (MOTIF)" value={entry.auto?.patternMatches || 0} />
+            {entry.auto?.pathNotes && (
               <div className="pt-2 border-t border-gray-100 dark:border-gray-700">
                 <p className="text-gray-600 dark:text-gray-400 font-medium mb-1">Path Notes:</p>
-                <p className="text-gray-900 dark:text-white">{(entry.auto as any).pathNotes}</p>
+                <p className="text-gray-900 dark:text-white">{entry.auto.pathNotes}</p>
               </div>
             )}
           </div>
         </div>
+
+        {/* Auto Path Drawing */}
+        {entry.auto?.autoPath && (
+          <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+              <Route className="w-5 h-5" />
+              Auto Path Drawing
+            </h3>
+            <AutoPathViewer 
+              pathData={entry.auto.autoPath} 
+              startPosition={entry.auto.startPosition}
+            />
+          </div>
+        )}
 
         {/* Tele-Op Details */}
         <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm">
@@ -118,23 +134,20 @@ const EntryDetail: React.FC = () => {
             Tele-Op Phase
           </h3>
           <div className="space-y-2 text-sm">
-            <DetailRow label="Artifacts Scored" value={(entry.teleop as any).artifactsScored || 0} />
-            <DetailRow label="Cycles Completed" value={(entry.teleop as any).cyclesCompleted || 0} />
+            <DetailRow label="Classified Artifacts" value={entry.teleop?.classifiedArtifacts || 0} />
+            <DetailRow label="Overflow Artifacts" value={entry.teleop?.overflowArtifacts || 0} />
+            <DetailRow label="Depot Artifacts" value={entry.teleop?.depotArtifacts || 0} />
+            <DetailRow label="Pattern Matches (MOTIF)" value={entry.teleop?.patternMatches || 0} />
+            <DetailRow label="Cycles Completed" value={entry.teleop?.cyclesCompleted || 0} />
           </div>
         </div>
 
         {/* Endgame Details */}
         <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Endgame Phase</h3>
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">🏁 Endgame Phase</h3>
           <div className="space-y-2 text-sm">
-            <DetailRow 
-              label="Robot Action" 
-              value={
-                (entry.endgame as any).action === 'none' ? 'None (0 pts)' :
-                (entry.endgame as any).action === 'parked' ? 'Parked (5 pts)' :
-                (entry.endgame as any).action === 'hanging' ? 'Hanging (10 pts)' : 'Unknown'
-              } 
-            />
+            <DetailRow label="Base Partial Returns" value={entry.endgame?.basePartialRobots || 0} />
+            <DetailRow label="Base Full Returns" value={entry.endgame?.baseFullRobots || 0} />
           </div>
         </div>
 
@@ -199,6 +212,168 @@ const DetailRow: React.FC<DetailRowProps> = ({ label, value }) => {
     <div className="flex justify-between py-2 border-b border-gray-100 dark:border-gray-700">
       <span className="text-gray-600 dark:text-gray-400">{label}</span>
       <span className="font-medium text-gray-900 dark:text-white capitalize">{value}</span>
+    </div>
+  );
+};
+
+// Format start position to readable text
+const formatStartPosition = (pos?: string): string => {
+  if (!pos) return 'Not Set';
+  const positions: Record<string, string> = {
+    'blue-classifier': 'Blue Against Classifier',
+    'blue-launch': 'Blue Launch Zone',
+    'red-classifier': 'Red Against Classifier',
+    'red-launch': 'Red Launch Zone',
+  };
+  return positions[pos] || pos;
+};
+
+// Auto Path Viewer Component
+interface AutoPathViewerProps {
+  pathData: { id: string; paths: any[] } | string;
+  startPosition?: string;
+}
+
+const AutoPathViewer: React.FC<AutoPathViewerProps> = ({ pathData, startPosition }) => {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [fieldImage, setFieldImage] = useState<HTMLImageElement | null>(null);
+  const CANVAS_SIZE = 300;
+
+  useEffect(() => {
+    const img = new Image();
+    img.src = '/ftc.png';
+    img.onload = () => setFieldImage(img);
+  }, []);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    // Draw field background
+    ctx.fillStyle = '#6B7280';
+    ctx.fillRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
+    
+    if (fieldImage) {
+      ctx.drawImage(fieldImage, 0, 0, CANVAS_SIZE, CANVAS_SIZE);
+    }
+
+    // Draw starting position
+    if (startPosition) {
+      const positions: Record<string, { x: number; y: number }> = {
+        'blue-classifier': { x: CANVAS_SIZE * 0.15, y: CANVAS_SIZE * 0.85 },
+        'blue-launch': { x: CANVAS_SIZE * 0.35, y: CANVAS_SIZE * 0.85 },
+        'red-classifier': { x: CANVAS_SIZE * 0.65, y: CANVAS_SIZE * 0.15 },
+        'red-launch': { x: CANVAS_SIZE * 0.85, y: CANVAS_SIZE * 0.15 },
+      };
+      const startPos = positions[startPosition];
+      if (startPos) {
+        const isBlue = startPosition.startsWith('blue');
+        ctx.strokeStyle = isBlue ? '#3B82F6' : '#EF4444';
+        ctx.lineWidth = 2;
+        ctx.fillStyle = isBlue ? 'rgba(59, 130, 246, 0.3)' : 'rgba(239, 68, 68, 0.3)';
+        ctx.beginPath();
+        ctx.arc(startPos.x, startPos.y, 12, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+      }
+    }
+
+    // Parse and draw paths
+    let paths: any[] = [];
+    try {
+      if (typeof pathData === 'string') {
+        paths = JSON.parse(pathData);
+      } else if (pathData.paths) {
+        paths = pathData.paths;
+      }
+    } catch (e) {
+      console.error('Failed to parse path data');
+      return;
+    }
+
+    // Scale factor (original canvas was 360, this one is 300)
+    const scale = CANVAS_SIZE / 360;
+
+    paths.forEach((path: any) => {
+      if (path.tool === 'dot' && path.points?.[0]) {
+        // Draw dot
+        const point = path.points[0];
+        ctx.fillStyle = path.color || '#3B82F6';
+        ctx.beginPath();
+        ctx.arc(point.x * scale, point.y * scale, 6, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = '#FFFFFF';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+      } else if (path.points && path.points.length > 1) {
+        // Draw line path
+        const points = path.points;
+        ctx.strokeStyle = path.color || '#3B82F6';
+        ctx.lineWidth = 3;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        ctx.beginPath();
+        ctx.moveTo(points[0].x * scale, points[0].y * scale);
+        for (let i = 1; i < points.length; i++) {
+          ctx.lineTo(points[i].x * scale, points[i].y * scale);
+        }
+        ctx.stroke();
+
+        // Draw start point (green)
+        ctx.fillStyle = '#10B981';
+        ctx.beginPath();
+        ctx.arc(points[0].x * scale, points[0].y * scale, 5, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Draw end point (red)
+        ctx.fillStyle = '#EF4444';
+        ctx.beginPath();
+        ctx.arc(points[points.length - 1].x * scale, points[points.length - 1].y * scale, 5, 0, Math.PI * 2);
+        ctx.fill();
+      } else if (Array.isArray(path) && path.length > 1) {
+        // Handle old format (array of points directly)
+        ctx.strokeStyle = '#3B82F6';
+        ctx.lineWidth = 3;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        ctx.beginPath();
+        ctx.moveTo(path[0].x * scale, path[0].y * scale);
+        for (let i = 1; i < path.length; i++) {
+          ctx.lineTo(path[i].x * scale, path[i].y * scale);
+        }
+        ctx.stroke();
+
+        // Draw start/end points
+        ctx.fillStyle = '#10B981';
+        ctx.beginPath();
+        ctx.arc(path[0].x * scale, path[0].y * scale, 5, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#EF4444';
+        ctx.beginPath();
+        ctx.arc(path[path.length - 1].x * scale, path[path.length - 1].y * scale, 5, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    });
+  }, [pathData, startPosition, fieldImage]);
+
+  return (
+    <div className="flex flex-col items-center">
+      <canvas
+        ref={canvasRef}
+        width={CANVAS_SIZE}
+        height={CANVAS_SIZE}
+        className="w-full max-w-[300px] border-2 border-gray-300 dark:border-gray-600 rounded-lg"
+      />
+      <div className="mt-2 text-xs text-gray-500 dark:text-gray-400 flex items-center gap-4">
+        <span className="flex items-center gap-1">
+          <span className="inline-block w-3 h-3 bg-green-500 rounded-full"></span> Start
+        </span>
+        <span className="flex items-center gap-1">
+          <span className="inline-block w-3 h-3 bg-red-500 rounded-full"></span> End
+        </span>
+      </div>
     </div>
   );
 };

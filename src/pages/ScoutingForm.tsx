@@ -363,30 +363,16 @@ const ScoutingForm: React.FC = () => {
       </form>
 
       {showAutoPath && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-gray-800 rounded-xl w-full max-w-lg max-h-[90vh] overflow-auto">
-            <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
-              <h3 className="text-lg font-semibold dark:text-white">Draw Auto Path</h3>
-              <button onClick={() => setShowAutoPath(false)} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg">✕</button>
-            </div>
-            <div className="p-4">
-              <AutoPathCanvas
-                onSave={(pathData) => {
-                  setFormData({ ...formData, auto: { ...formData.auto, autoPath: pathData } });
-                  setShowAutoPath(false);
-                }}
-                onClose={() => setShowAutoPath(false)}
-                initialPath={formData.auto.autoPath || undefined}
-                alliance={formData.alliance}
-                startPosition={formData.auto.startPosition}
-              />
-              <div className="mt-4">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Path Notes</label>
-                <textarea value={formData.auto.pathNotes} onChange={(e) => setFormData({ ...formData, auto: { ...formData.auto, pathNotes: e.target.value } })} rows={2} className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white resize-none" placeholder="Describe the auto path strategy..." />
-              </div>
-            </div>
-          </div>
-        </div>
+        <AutoPathCanvas
+          onSave={(pathData) => {
+            setFormData({ ...formData, auto: { ...formData.auto, autoPath: pathData } });
+            setShowAutoPath(false);
+          }}
+          onClose={() => setShowAutoPath(false)}
+          initialPath={formData.auto.autoPath || undefined}
+          alliance={formData.alliance}
+          startPosition={formData.auto.startPosition}
+        />
       )}
     </div>
   );

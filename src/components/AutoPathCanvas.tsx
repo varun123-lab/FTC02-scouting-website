@@ -1,5 +1,5 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { X, Trash2, Undo } from 'lucide-react';
+import { X, Trash2, Undo, Pencil, Circle } from 'lucide-react';
 
 interface AutoPathCanvasProps {
   onSave: (pathData: string) => void;
@@ -9,14 +9,27 @@ interface AutoPathCanvasProps {
   startPosition?: 'blue-classifier' | 'blue-launch' | 'red-classifier' | 'red-launch';
 }
 
+type DrawingTool = 'pen' | 'dot';
+type PenColor = '#3B82F6' | '#EF4444' | '#10B981' | '#F59E0B' | '#8B5CF6';
+
 const AutoPathCanvas: React.FC<AutoPathCanvasProps> = ({ onSave, onClose, initialPath, startPosition }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isDrawing, setIsDrawing] = useState(false);
-  const [paths, setPaths] = useState<Array<Array<{ x: number; y: number }>>>([]);
+  const [paths, setPaths] = useState<Array<{ points: Array<{ x: number; y: number }>; color: string; tool: DrawingTool }>>([]);
   const [currentPath, setCurrentPath] = useState<Array<{ x: number; y: number }>>([]);
   const [ctx, setCtx] = useState<CanvasRenderingContext2D | null>(null);
   const [fieldImage, setFieldImage] = useState<HTMLImageElement | null>(null);
   const [imageLoaded, setImageLoaded] = useState(false);
+  const [selectedTool, setSelectedTool] = useState<DrawingTool>('pen');
+  const [selectedColor, setSelectedColor] = useState<PenColor>('#3B82F6');
+
+  const penColors: { color: PenColor; name: string }[] = [
+    { color: '#3B82F6', name: 'Blue' },
+    { color: '#EF4444', name: 'Red' },
+    { color: '#10B981', name: 'Green' },
+    { color: '#F59E0B', name: 'Orange' },
+    { color: '#8B5CF6', name: 'Purple' },
+  ];
 
   // Field dimensions (FTC field is 12ft x 12ft, represented as 360x360 canvas)
   const CANVAS_SIZE = 360;
@@ -53,8 +66,21 @@ const AutoPathCanvas: React.FC<AutoPathCanvasProps> = ({ onSave, onClose, initia
     if (initialPath) {
       try {
         const loadedPaths = JSON.parse(initialPath);
-        setPaths(loadedPaths);
-        loadedPaths.forEach((path: any) => drawPath(context, path, '#3B82F6'));
+        // Handle both old format (array of points) and new format (array of path objects)
+        const normalizedPaths = loadedPaths.map((path: any) => {
+          if (Array.isArray(path)) {
+            return { points: path, color: '#3B82F6', tool: 'pen' as DrawingTool };
+          }
+          return path;
+        });
+        setPaths(normalizedPaths);
+        normalizedPaths.forEach((path: any) => {
+          if (path.tool === 'dot') {
+            drawDot(context, path.points[0], path.color);
+          } else {
+            drawPath(context, path.points, path.color);
+          }
+        });
       } catch (e) {
         console.error('Failed to load initial path');
       }
@@ -151,6 +177,18 @@ const AutoPathCanvas: React.FC<AutoPathCanvasProps> = ({ onSave, onClose, initia
     context.fill();
   };
 
+  const drawDot = (context: CanvasRenderingContext2D, point: { x: number; y: number }, color: string) => {
+    context.fillStyle = color;
+    context.beginPath();
+    context.arc(point.x, point.y, 8, 0, Math.PI * 2);
+    context.fill();
+    
+    // Add outline
+    context.strokeStyle = '#FFFFFF';
+    context.lineWidth = 2;
+    context.stroke();
+  };
+
   const getCanvasPosition = (e: React.TouchEvent | React.MouseEvent) => {
     const canvas = canvasRef.current;
     if (!canvas) return null;
@@ -179,13 +217,22 @@ const AutoPathCanvas: React.FC<AutoPathCanvasProps> = ({ onSave, onClose, initia
     const pos = getCanvasPosition(e);
     if (!pos) return;
 
-    setIsDrawing(true);
-    setCurrentPath([pos]);
+    if (selectedTool === 'dot') {
+      // For dot tool, just place a dot immediately
+      const newDot = { points: [pos], color: selectedColor, tool: 'dot' as DrawingTool };
+      setPaths([...paths, newDot]);
+      if (ctx) {
+        drawDot(ctx, pos, selectedColor);
+      }
+    } else {
+      setIsDrawing(true);
+      setCurrentPath([pos]);
+    }
   };
 
   const draw = (e: React.TouchEvent | React.MouseEvent) => {
     e.preventDefault();
-    if (!isDrawing || !ctx) return;
+    if (!isDrawing || !ctx || selectedTool === 'dot') return;
 
     const pos = getCanvasPosition(e);
     if (!pos) return;
@@ -194,24 +241,35 @@ const AutoPathCanvas: React.FC<AutoPathCanvasProps> = ({ onSave, onClose, initia
     setCurrentPath(newPath);
 
     // Redraw everything
+    redrawCanvas();
+    drawPath(ctx, newPath, selectedColor);
+  };
+
+  const redrawCanvas = () => {
+    if (!ctx) return;
     drawField(ctx);
-    paths.forEach(path => drawPath(ctx, path, '#3B82F6'));
-    drawPath(ctx, newPath, '#F59E0B');
+    paths.forEach(path => {
+      if (path.tool === 'dot') {
+        drawDot(ctx, path.points[0], path.color);
+      } else {
+        drawPath(ctx, path.points, path.color);
+      }
+    });
   };
 
   const stopDrawing = () => {
     if (isDrawing && currentPath.length > 1) {
-      setPaths([...paths, currentPath]);
+      setPaths([...paths, { points: currentPath, color: selectedColor, tool: 'pen' }]);
     }
     setIsDrawing(false);
     setCurrentPath([]);
 
     // Redraw final state
     if (ctx) {
-      drawField(ctx);
-      [...paths, currentPath].forEach(path => {
-        if (path.length > 1) drawPath(ctx, path, '#3B82F6');
-      });
+      redrawCanvas();
+      if (currentPath.length > 1) {
+        drawPath(ctx, currentPath, selectedColor);
+      }
     }
   };
 
@@ -222,7 +280,13 @@ const AutoPathCanvas: React.FC<AutoPathCanvasProps> = ({ onSave, onClose, initia
 
     if (ctx) {
       drawField(ctx);
-      newPaths.forEach(path => drawPath(ctx, path, '#3B82F6'));
+      newPaths.forEach(path => {
+        if (path.tool === 'dot') {
+          drawDot(ctx, path.points[0], path.color);
+        } else {
+          drawPath(ctx, path.points, path.color);
+        }
+      });
     }
   };
 
@@ -242,16 +306,62 @@ const AutoPathCanvas: React.FC<AutoPathCanvasProps> = ({ onSave, onClose, initia
 
   return (
     <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4">
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-md w-full">
+      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-md w-full max-h-[95vh] overflow-y-auto">
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Draw Auto Path</h3>
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">✏️ Draw Auto Path</h3>
           <button
             onClick={onClose}
             className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
           >
             <X className="w-5 h-5 text-gray-600 dark:text-gray-400" />
           </button>
+        </div>
+
+        {/* Drawing Tools */}
+        <div className="px-4 pt-4 pb-2">
+          <div className="flex items-center gap-2 mb-3">
+            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Tool:</span>
+            <button
+              onClick={() => setSelectedTool('pen')}
+              className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                selectedTool === 'pen'
+                  ? 'bg-primary-600 text-white'
+                  : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+              }`}
+            >
+              <Pencil className="w-4 h-4" />
+              Pen
+            </button>
+            <button
+              onClick={() => setSelectedTool('dot')}
+              className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                selectedTool === 'dot'
+                  ? 'bg-primary-600 text-white'
+                  : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+              }`}
+            >
+              <Circle className="w-4 h-4" />
+              Dot
+            </button>
+          </div>
+          
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Color:</span>
+            <div className="flex gap-1">
+              {penColors.map(({ color, name }) => (
+                <button
+                  key={color}
+                  onClick={() => setSelectedColor(color)}
+                  title={name}
+                  className={`w-8 h-8 rounded-full transition-transform hover:scale-110 ${
+                    selectedColor === color ? 'ring-2 ring-offset-2 ring-gray-400 dark:ring-offset-gray-800' : ''
+                  }`}
+                  style={{ backgroundColor: color }}
+                />
+              ))}
+            </div>
+          </div>
         </div>
 
         {/* Canvas */}
@@ -271,16 +381,24 @@ const AutoPathCanvas: React.FC<AutoPathCanvasProps> = ({ onSave, onClose, initia
               onTouchEnd={stopDrawing}
             />
             <div className="mt-2 text-xs text-gray-500 dark:text-gray-400 text-center">
-              <span className="inline-block w-3 h-3 bg-green-500 rounded-full mr-1"></span> Start
-              <span className="mx-2">•</span>
-              <span className="inline-block w-3 h-3 bg-red-500 rounded-full mr-1"></span> End
+              {selectedTool === 'pen' ? (
+                <>
+                  <span className="inline-block w-3 h-3 bg-green-500 rounded-full mr-1"></span> Start
+                  <span className="mx-2">•</span>
+                  <span className="inline-block w-3 h-3 bg-red-500 rounded-full mr-1"></span> End
+                </>
+              ) : (
+                <>Tap to place markers on the field</>
+              )}
             </div>
           </div>
 
           {/* Instructions */}
           <div className="mt-3 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
             <p className="text-sm text-blue-900 dark:text-blue-200">
-              Draw the robot's autonomous path on the field. Green dot = start, Red dot = end.
+              {selectedTool === 'pen' 
+                ? '🖊️ Draw lines to show the robot path. Use different colors for different actions!'
+                : '📍 Tap to place markers for key positions like scoring locations.'}
             </p>
           </div>
         </div>

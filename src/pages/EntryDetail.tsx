@@ -2,7 +2,7 @@ import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getEntriesByUser } from '../utils/storage';
 import { useAuth } from '../contexts/AuthContext';
-import { ArrowLeft, Edit, MapPin, Zap, Shield } from 'lucide-react';
+import { ArrowLeft, MapPin, Zap, Shield } from 'lucide-react';
 
 const EntryDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();

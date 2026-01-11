@@ -205,3 +205,139 @@ export const importDataFromJSON = (file: File): Promise<number> => {
     reader.readAsText(file);
   });
 };
+
+// Export user-specific data as JSON
+export const exportUserDataAsJSON = (userId: string, username: string): void => {
+  const entries = getEntriesByUser(userId);
+  if (entries.length === 0) {
+    alert('No data to export for this user');
+    return;
+  }
+  const dataStr = JSON.stringify(entries, null, 2);
+  const blob = new Blob([dataStr], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `ftc-scouting-${username}-${new Date().toISOString().split('T')[0]}.json`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+};
+
+// Export user-specific data as CSV
+export const exportUserDataAsCSV = (userId: string, username: string): void => {
+  const entries = getEntriesByUser(userId);
+  if (entries.length === 0) {
+    alert('No data to export for this user');
+    return;
+  }
+
+  const headers = [
+    'Team Number',
+    'Match Number',
+    'Alliance',
+    'Start Position',
+    'Auto Leave Robots',
+    'Auto Classified Artifacts',
+    'Auto Overflow Artifacts',
+    'Auto Pattern Matches',
+    'Teleop Classified Artifacts',
+    'Teleop Overflow Artifacts',
+    'Teleop Depot Artifacts',
+    'Teleop Pattern Matches',
+    'Teleop Cycles',
+    'Endgame Base Partial',
+    'Endgame Base Full',
+    'Auto Score',
+    'Teleop Score',
+    'Endgame Score',
+    'Total Score',
+    'Defense Rating',
+    'Speed Rating',
+    'Driver Skill',
+    'Reliability',
+    'Notes',
+    'Timestamp'
+  ];
+
+  const rows = entries.map(entry => [
+    entry.teamNumber,
+    entry.matchNumber,
+    entry.alliance,
+    entry.auto?.startPosition || '',
+    entry.auto?.leaveRobots || 0,
+    entry.auto?.classifiedArtifacts || 0,
+    entry.auto?.overflowArtifacts || 0,
+    entry.auto?.patternMatches || 0,
+    entry.teleop?.classifiedArtifacts || 0,
+    entry.teleop?.overflowArtifacts || 0,
+    entry.teleop?.depotArtifacts || 0,
+    entry.teleop?.patternMatches || 0,
+    entry.teleop?.cyclesCompleted || 0,
+    entry.endgame?.basePartialRobots || 0,
+    entry.endgame?.baseFullRobots || 0,
+    entry.scores?.autoScore || 0,
+    entry.scores?.teleopScore || 0,
+    entry.scores?.endgameScore || 0,
+    entry.scores?.totalScore || 0,
+    entry.defenseRating || 0,
+    entry.speedRating || 0,
+    entry.driverSkill || 0,
+    entry.reliability || 0,
+    `"${(entry.notes || '').replace(/"/g, '""')}"`,
+    entry.timestamp || ''
+  ]);
+
+  const csvContent = [headers.join(','), ...rows.map(row => row.join(','))].join('\n');
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `ftc-scouting-${username}-${new Date().toISOString().split('T')[0]}.csv`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+};
+
+// Calculate user statistics
+export const getUserStats = (userId: string) => {
+  const entries = getEntriesByUser(userId);
+  if (entries.length === 0) {
+    return {
+      totalEntries: 0,
+      uniqueTeams: 0,
+      avgAutoScore: 0,
+      avgTeleopScore: 0,
+      avgEndgameScore: 0,
+      avgTotalScore: 0,
+      highestScore: 0,
+      lowestScore: 0,
+      avgDefenseRating: 0,
+      avgSpeedRating: 0,
+    };
+  }
+
+  const uniqueTeams = new Set(entries.map(e => e.teamNumber)).size;
+  const totalAuto = entries.reduce((sum, e) => sum + (e.scores?.autoScore || 0), 0);
+  const totalTeleop = entries.reduce((sum, e) => sum + (e.scores?.teleopScore || 0), 0);
+  const totalEndgame = entries.reduce((sum, e) => sum + (e.scores?.endgameScore || 0), 0);
+  const totalScore = entries.reduce((sum, e) => sum + (e.scores?.totalScore || 0), 0);
+  const totalDefense = entries.reduce((sum, e) => sum + (e.defenseRating || 0), 0);
+  const totalSpeed = entries.reduce((sum, e) => sum + (e.speedRating || 0), 0);
+  const scores = entries.map(e => e.scores?.totalScore || 0);
+
+  return {
+    totalEntries: entries.length,
+    uniqueTeams,
+    avgAutoScore: Math.round((totalAuto / entries.length) * 10) / 10,
+    avgTeleopScore: Math.round((totalTeleop / entries.length) * 10) / 10,
+    avgEndgameScore: Math.round((totalEndgame / entries.length) * 10) / 10,
+    avgTotalScore: Math.round((totalScore / entries.length) * 10) / 10,
+    highestScore: Math.max(...scores),
+    lowestScore: Math.min(...scores),
+    avgDefenseRating: Math.round((totalDefense / entries.length) * 10) / 10,
+    avgSpeedRating: Math.round((totalSpeed / entries.length) * 10) / 10,
+  };
+};

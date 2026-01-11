@@ -2,8 +2,8 @@ import React, { useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
-import { LogOut, Moon, Sun, User, Database, Info, Download, Upload, FileJson, FileSpreadsheet } from 'lucide-react';
-import { exportDataAsJSON, exportDataAsCSV, importDataFromJSON, getScoutingEntries } from '../utils/storage';
+import { LogOut, Moon, Sun, User, Database, Info, Download, Upload, FileJson, FileSpreadsheet, TrendingUp, Trophy, Target, Users } from 'lucide-react';
+import { exportDataAsJSON, exportDataAsCSV, importDataFromJSON, getScoutingEntries, getEntriesByUser, exportUserDataAsJSON, exportUserDataAsCSV, getUserStats } from '../utils/storage';
 
 const Settings: React.FC = () => {
   const { user, logout } = useAuth();
@@ -23,6 +23,18 @@ const Settings: React.FC = () => {
 
   const handleExportCSV = () => {
     exportDataAsCSV();
+  };
+
+  const handleExportMyJSON = () => {
+    if (user) {
+      exportUserDataAsJSON(user.id, user.username);
+    }
+  };
+
+  const handleExportMyCSV = () => {
+    if (user) {
+      exportUserDataAsCSV(user.id, user.username);
+    }
   };
 
   const handleImportClick = () => {
@@ -49,6 +61,8 @@ const Settings: React.FC = () => {
   };
 
   const entryCount = getScoutingEntries().length;
+  const myEntryCount = user ? getEntriesByUser(user.id).length : 0;
+  const myStats = user ? getUserStats(user.id) : null;
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pb-20">
@@ -68,10 +82,71 @@ const Settings: React.FC = () => {
             </div>
             <div>
               <p className="text-lg font-semibold text-gray-900 dark:text-white">{user?.username}</p>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Scout Account</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">Scout Account • {myEntryCount} entries</p>
             </div>
           </div>
         </div>
+
+        {/* My Stats */}
+        {myStats && myStats.totalEntries > 0 && (
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm overflow-hidden">
+            <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex items-center gap-2">
+              <TrendingUp className="w-5 h-5 text-primary-600 dark:text-primary-400" />
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-white">My Statistics</h2>
+            </div>
+            <div className="p-4">
+              {/* Quick Stats */}
+              <div className="grid grid-cols-2 gap-3 mb-4">
+                <div className="bg-primary-50 dark:bg-primary-900/20 rounded-lg p-3 text-center">
+                  <p className="text-2xl font-bold text-primary-600 dark:text-primary-400">{myStats.totalEntries}</p>
+                  <p className="text-xs text-primary-700 dark:text-primary-300">Entries Scouted</p>
+                </div>
+                <div className="bg-green-50 dark:bg-green-900/20 rounded-lg p-3 text-center">
+                  <p className="text-2xl font-bold text-green-600 dark:text-green-400">{myStats.uniqueTeams}</p>
+                  <p className="text-xs text-green-700 dark:text-green-300">Unique Teams</p>
+                </div>
+              </div>
+              
+              {/* Average Scores */}
+              <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3 mb-3">
+                <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-2">
+                  <Target className="w-4 h-4" /> Average Scores (from my entries)
+                </p>
+                <div className="grid grid-cols-4 gap-2 text-center">
+                  <div>
+                    <p className="text-lg font-semibold text-blue-600 dark:text-blue-400">{myStats.avgAutoScore}</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">Auto</p>
+                  </div>
+                  <div>
+                    <p className="text-lg font-semibold text-green-600 dark:text-green-400">{myStats.avgTeleopScore}</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">Teleop</p>
+                  </div>
+                  <div>
+                    <p className="text-lg font-semibold text-purple-600 dark:text-purple-400">{myStats.avgEndgameScore}</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">Endgame</p>
+                  </div>
+                  <div>
+                    <p className="text-lg font-semibold text-gray-900 dark:text-white">{myStats.avgTotalScore}</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">Total</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Score Range */}
+              <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                <div className="text-center flex-1">
+                  <p className="text-xs text-gray-500 dark:text-gray-400">Lowest</p>
+                  <p className="text-lg font-semibold text-red-600 dark:text-red-400">{myStats.lowestScore}</p>
+                </div>
+                <div className="h-8 w-px bg-gray-200 dark:bg-gray-600" />
+                <div className="text-center flex-1">
+                  <p className="text-xs text-gray-500 dark:text-gray-400">Highest</p>
+                  <p className="text-lg font-semibold text-green-600 dark:text-green-400">{myStats.highestScore}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Appearance */}
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm overflow-hidden">
@@ -113,7 +188,26 @@ const Settings: React.FC = () => {
             {/* Export Options */}
             <div className="pt-2 border-t border-gray-200 dark:border-gray-700">
               <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3 flex items-center gap-2">
-                <Download className="w-4 h-4" /> Export Data
+                <Download className="w-4 h-4" /> Export My Entries Only
+              </p>
+              <div className="grid grid-cols-2 gap-2 mb-4">
+                <button
+                  onClick={handleExportMyCSV}
+                  className="flex items-center justify-center gap-2 px-4 py-3 bg-primary-50 dark:bg-primary-900/20 hover:bg-primary-100 dark:hover:bg-primary-900/30 text-primary-700 dark:text-primary-400 rounded-lg font-medium transition-colors border border-primary-200 dark:border-primary-800"
+                >
+                  <FileSpreadsheet className="w-5 h-5" />
+                  My CSV
+                </button>
+                <button
+                  onClick={handleExportMyJSON}
+                  className="flex items-center justify-center gap-2 px-4 py-3 bg-primary-50 dark:bg-primary-900/20 hover:bg-primary-100 dark:hover:bg-primary-900/30 text-primary-700 dark:text-primary-400 rounded-lg font-medium transition-colors border border-primary-200 dark:border-primary-800"
+                >
+                  <FileJson className="w-5 h-5" />
+                  My JSON
+                </button>
+              </div>
+              <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3 flex items-center gap-2">
+                <Users className="w-4 h-4" /> Export All Entries
               </p>
               <div className="grid grid-cols-2 gap-2">
                 <button
@@ -121,14 +215,14 @@ const Settings: React.FC = () => {
                   className="flex items-center justify-center gap-2 px-4 py-3 bg-green-50 dark:bg-green-900/20 hover:bg-green-100 dark:hover:bg-green-900/30 text-green-700 dark:text-green-400 rounded-lg font-medium transition-colors border border-green-200 dark:border-green-800"
                 >
                   <FileSpreadsheet className="w-5 h-5" />
-                  CSV
+                  All CSV
                 </button>
                 <button
                   onClick={handleExportJSON}
                   className="flex items-center justify-center gap-2 px-4 py-3 bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/30 text-blue-700 dark:text-blue-400 rounded-lg font-medium transition-colors border border-blue-200 dark:border-blue-800"
                 >
                   <FileJson className="w-5 h-5" />
-                  JSON
+                  All JSON
                 </button>
               </div>
             </div>

@@ -1,13 +1,17 @@
 import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getScoutingEntries } from '../utils/storage';
+import { getEntriesByUser } from '../utils/storage';
+import { useAuth } from '../contexts/AuthContext';
 import { ArrowLeft, Edit, MapPin, Zap, Shield } from 'lucide-react';
 
 const EntryDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { user } = useAuth();
   
-  const entry = getScoutingEntries().find(e => e.id === id);
+  // Only find entry from user's own entries (private)
+  const myEntries = user ? getEntriesByUser(user.id) : [];
+  const entry = myEntries.find(e => e.id === id);
 
   if (!entry) {
     return (

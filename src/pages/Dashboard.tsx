@@ -1,26 +1,21 @@
 import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { getScoutingEntries } from '../utils/storage';
+import { getEntriesByUser } from '../utils/storage';
 import { ScoutingEntry } from '../types';
-import { Search, Filter, Plus, Trophy } from 'lucide-react';
+import { Search, Plus, Trophy } from 'lucide-react';
 
 const Dashboard: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
-  const [filterUser, setFilterUser] = useState('all');
   const [sortBy, setSortBy] = useState<'timestamp' | 'teamNumber' | 'totalScore'>('timestamp');
 
-  const allEntries = getScoutingEntries();
+  // Only get current user's entries - private to each user
+  const myEntries = user ? getEntriesByUser(user.id) : [];
 
   const filteredEntries = useMemo(() => {
-    let entries = allEntries;
-
-    // Filter by user
-    if (filterUser !== 'all') {
-      entries = entries.filter(e => e.userId === filterUser);
-    }
+    let entries = [...myEntries];
 
     // Search by team number or match number
     if (searchTerm) {
@@ -42,10 +37,9 @@ const Dashboard: React.FC = () => {
     });
 
     return entries;
-  }, [allEntries, searchTerm, filterUser, sortBy]);
+  }, [myEntries, searchTerm, sortBy]);
 
-  const userEntries = allEntries.filter(e => e.userId === user?.id);
-  const uniqueUsers = Array.from(new Set(allEntries.map(e => e.username)));
+  const uniqueTeams = new Set(myEntries.map(e => e.teamNumber)).size;
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pb-20">
@@ -66,18 +60,14 @@ const Dashboard: React.FC = () => {
           </div>
 
           {/* Stats */}
-          <div className="grid grid-cols-3 gap-3 mb-4">
+          <div className="grid grid-cols-2 gap-3 mb-4">
             <div className="bg-primary-50 dark:bg-primary-900/20 rounded-lg p-3">
               <p className="text-xs text-primary-600 dark:text-primary-400 font-medium">My Entries</p>
-              <p className="text-2xl font-bold text-primary-900 dark:text-primary-200">{userEntries.length}</p>
+              <p className="text-2xl font-bold text-primary-900 dark:text-primary-200">{myEntries.length}</p>
             </div>
             <div className="bg-green-50 dark:bg-green-900/20 rounded-lg p-3">
-              <p className="text-xs text-green-600 dark:text-green-400 font-medium">Total Entries</p>
-              <p className="text-2xl font-bold text-green-900 dark:text-green-200">{allEntries.length}</p>
-            </div>
-            <div className="bg-purple-50 dark:bg-purple-900/20 rounded-lg p-3">
-              <p className="text-xs text-purple-600 dark:text-purple-400 font-medium">Scouts</p>
-              <p className="text-2xl font-bold text-purple-900 dark:text-purple-200">{uniqueUsers.length}</p>
+              <p className="text-xs text-green-600 dark:text-green-400 font-medium">Teams Scouted</p>
+              <p className="text-2xl font-bold text-green-900 dark:text-green-200">{uniqueTeams}</p>
             </div>
           </div>
 
@@ -94,31 +84,15 @@ const Dashboard: React.FC = () => {
               />
             </div>
 
-            <div className="flex gap-2">
-              <select
-                value={filterUser}
-                onChange={(e) => setFilterUser(e.target.value)}
-                className="flex-1 px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm"
-              >
-                <option value="all">All Scouts</option>
-                <option value={user?.id}>My Entries</option>
-                {uniqueUsers.filter(u => u !== user?.username).map(username => (
-                  <option key={username} value={allEntries.find(e => e.username === username)?.userId}>
-                    {username}
-                  </option>
-                ))}
-              </select>
-
-              <select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value as any)}
-                className="flex-1 px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm"
-              >
-                <option value="timestamp">Recent First</option>
-                <option value="teamNumber">Team Number</option>
-                <option value="totalScore">Highest Score</option>
-              </select>
-            </div>
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value as any)}
+              className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm"
+            >
+              <option value="timestamp">Recent First</option>
+              <option value="teamNumber">Team Number</option>
+              <option value="totalScore">Highest Score</option>
+            </select>
           </div>
         </div>
       </div>

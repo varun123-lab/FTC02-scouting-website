@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { BarChart3, TrendingUp, Search, ChevronDown, ChevronUp, Trophy, Target, Zap, Shield } from 'lucide-react';
-import { getScoutingEntries } from '../utils/storage';
+import { getEntriesByUser } from '../utils/storage';
+import { useAuth } from '../contexts/AuthContext';
 import { ScoutingEntry } from '../types';
 
 interface TeamStats {
@@ -29,19 +30,21 @@ interface TeamStats {
 }
 
 const Analytics: React.FC = () => {
+  const { user } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState<'avgTotalScore' | 'matchCount' | 'teamNumber'>('avgTotalScore');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [expandedTeam, setExpandedTeam] = useState<string | null>(null);
 
-  const allEntries = getScoutingEntries();
+  // Only get current user's entries - private to each user
+  const myEntries = user ? getEntriesByUser(user.id) : [];
 
-  // Calculate team averages
+  // Calculate team averages from user's entries only
   const teamStats = useMemo(() => {
     const teamsMap = new Map<string, ScoutingEntry[]>();
     
     // Group entries by team
-    allEntries.forEach(entry => {
+    myEntries.forEach(entry => {
       const existing = teamsMap.get(entry.teamNumber) || [];
       teamsMap.set(entry.teamNumber, [...existing, entry]);
     });
@@ -101,7 +104,7 @@ const Analytics: React.FC = () => {
     });
 
     return stats;
-  }, [allEntries]);
+  }, [myEntries]);
 
   // Filter and sort
   const filteredTeams = useMemo(() => {
@@ -190,7 +193,7 @@ const Analytics: React.FC = () => {
           <div className="text-center py-12">
             <TrendingUp className="w-16 h-16 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
             <p className="text-gray-500 dark:text-gray-400">
-              {allEntries.length === 0 ? 'No scouting data yet' : 'No teams match your search'}
+              {myEntries.length === 0 ? 'No scouting data yet' : 'No teams match your search'}
             </p>
           </div>
         ) : (

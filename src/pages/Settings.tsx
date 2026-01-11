@@ -2,7 +2,7 @@ import React, { useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
-import { LogOut, Moon, Sun, User, Database, Info, Download, Upload, FileJson, FileSpreadsheet, TrendingUp, Trophy, Target, Users } from 'lucide-react';
+import { LogOut, Moon, Sun, User, Database, Info, Download, Upload, FileJson, FileSpreadsheet, TrendingUp, Target, Users } from 'lucide-react';
 import { exportDataAsJSON, exportDataAsCSV, importDataFromJSON, getScoutingEntries, getEntriesByUser, exportUserDataAsJSON, exportUserDataAsCSV, getUserStats } from '../utils/storage';
 
 const Settings: React.FC = () => {

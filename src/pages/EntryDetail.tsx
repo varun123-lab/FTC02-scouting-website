@@ -1,17 +1,67 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getEntriesByUser } from '../utils/storage';
+import { getScoutingEntries, deleteScoutingEntry } from '../utils/storage';
+import { deleteScoutingEntryFirebase, getScoutingEntryById, isFirebaseConfigured } from '../services/firebaseService';
 import { useAuth } from '../contexts/AuthContext';
-import { ArrowLeft, MapPin, Zap, Shield, Route } from 'lucide-react';
+import { ArrowLeft, MapPin, Zap, Shield, Route, Trash2, RefreshCw } from 'lucide-react';
+import { ScoutingEntry } from '../types';
 
 const EntryDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [entry, setEntry] = useState<ScoutingEntry | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   
-  // Only find entry from user's own entries (private)
-  const myEntries = user ? getEntriesByUser(user.id) : [];
-  const entry = myEntries.find(e => e.id === id);
+  const isCloudMode = isFirebaseConfigured();
+  
+  // Load entry from appropriate source
+  useEffect(() => {
+    const loadEntry = async () => {
+      if (!id) {
+        setIsLoading(false);
+        return;
+      }
+      
+      if (isCloudMode) {
+        const cloudEntry = await getScoutingEntryById(id);
+        setEntry(cloudEntry);
+      } else {
+        const allEntries = getScoutingEntries();
+        const localEntry = allEntries.find(e => e.id === id);
+        setEntry(localEntry || null);
+      }
+      setIsLoading(false);
+    };
+    
+    loadEntry();
+  }, [id, isCloudMode]);
+  
+  // Check if current user owns this entry
+  const isOwner = entry && user && entry.userId === user.id;
+
+  const handleDelete = async () => {
+    if (entry && isOwner) {
+      if (isCloudMode) {
+        await deleteScoutingEntryFirebase(entry.id);
+      } else {
+        deleteScoutingEntry(entry.id);
+      }
+      navigate('/dashboard');
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+        <div className="text-center">
+          <RefreshCw className="w-10 h-10 text-primary-600 animate-spin mx-auto mb-3" />
+          <p className="text-gray-600 dark:text-gray-400">Loading entry...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!entry) {
     return (
@@ -35,15 +85,50 @@ const EntryDetail: React.FC = () => {
       <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-10">
         <div className="px-4 py-3 flex items-center justify-between">
           <button
-            onClick={() => navigate('/dashboard')}
+            onClick={() => navigate(-1)}
             className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
           >
             <ArrowLeft className="w-6 h-6 text-gray-600 dark:text-gray-400" />
           </button>
           <h1 className="text-xl font-bold text-gray-900 dark:text-white">Entry Details</h1>
-          <div className="w-10"></div>
+          {isOwner ? (
+            <button
+              onClick={() => setShowDeleteConfirm(true)}
+              className="p-2 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-lg transition-colors"
+            >
+              <Trash2 className="w-6 h-6 text-red-500" />
+            </button>
+          ) : (
+            <div className="w-10"></div>
+          )}
         </div>
       </div>
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 max-w-sm w-full shadow-xl">
+            <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">Delete Entry?</h3>
+            <p className="text-gray-600 dark:text-gray-400 mb-6">
+              Are you sure you want to delete this scouting entry for Team {entry?.teamNumber}? This action cannot be undone.
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowDeleteConfirm(false)}
+                className="flex-1 px-4 py-2.5 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-xl font-medium transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDelete}
+                className="flex-1 px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-xl font-medium transition-colors"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="px-4 py-6 space-y-4">
         {/* Team Header */}

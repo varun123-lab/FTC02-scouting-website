@@ -1,5 +1,5 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { X, Trash2, Undo, Pencil, Circle } from 'lucide-react';
+import { X, Trash2, Undo, Pencil, Circle, Eraser } from 'lucide-react';
 
 interface AutoPathCanvasProps {
   onSave: (pathData: string) => void;
@@ -9,7 +9,7 @@ interface AutoPathCanvasProps {
   startPosition?: 'blue-classifier' | 'blue-launch' | 'red-classifier' | 'red-launch';
 }
 
-type DrawingTool = 'pen' | 'dot';
+type DrawingTool = 'pen' | 'dot' | 'eraser';
 type PenColor = '#3B82F6' | '#EF4444' | '#10B981' | '#F59E0B' | '#8B5CF6';
 
 const AutoPathCanvas: React.FC<AutoPathCanvasProps> = ({ onSave, onClose, initialPath, startPosition }) => {
@@ -224,14 +224,52 @@ const AutoPathCanvas: React.FC<AutoPathCanvasProps> = ({ onSave, onClose, initia
       if (ctx) {
         drawDot(ctx, pos, selectedColor);
       }
+    } else if (selectedTool === 'eraser') {
+      // For eraser, find and remove paths near the click position
+      eraseAtPosition(pos);
     } else {
       setIsDrawing(true);
       setCurrentPath([pos]);
     }
   };
 
+  const eraseAtPosition = (pos: { x: number; y: number }) => {
+    const ERASE_RADIUS = 20;
+    const newPaths = paths.filter(path => {
+      // Check if any point in this path is close to the erase position
+      return !path.points.some((point: { x: number; y: number }) => {
+        const distance = Math.sqrt(Math.pow(point.x - pos.x, 2) + Math.pow(point.y - pos.y, 2));
+        return distance < ERASE_RADIUS;
+      });
+    });
+    
+    if (newPaths.length !== paths.length) {
+      setPaths(newPaths);
+      if (ctx) {
+        drawField(ctx);
+        newPaths.forEach(path => {
+          if (path.tool === 'dot') {
+            drawDot(ctx, path.points[0], path.color);
+          } else {
+            drawPath(ctx, path.points, path.color);
+          }
+        });
+      }
+    }
+  };
+
   const draw = (e: React.TouchEvent | React.MouseEvent) => {
     e.preventDefault();
+    
+    // Handle eraser drag
+    if (selectedTool === 'eraser') {
+      const pos = getCanvasPosition(e);
+      if (pos) {
+        eraseAtPosition(pos);
+      }
+      return;
+    }
+    
     if (!isDrawing || !ctx || selectedTool === 'dot') return;
 
     const pos = getCanvasPosition(e);
@@ -305,10 +343,10 @@ const AutoPathCanvas: React.FC<AutoPathCanvasProps> = ({ onSave, onClose, initia
   };
 
   return (
-    <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4">
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-md w-full max-h-[95vh] overflow-y-auto">
+    <div className="fixed inset-0 bg-black/70 z-50 flex items-start justify-center p-4 overflow-y-auto">
+      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-md w-full my-4">
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
+        <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700 sticky top-0 bg-white dark:bg-gray-800 rounded-t-xl z-10">
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white">✏️ Draw Auto Path</h3>
           <button
             onClick={onClose}
@@ -320,7 +358,7 @@ const AutoPathCanvas: React.FC<AutoPathCanvasProps> = ({ onSave, onClose, initia
 
         {/* Drawing Tools */}
         <div className="px-4 pt-4 pb-2">
-          <div className="flex items-center gap-2 mb-3">
+          <div className="flex items-center gap-2 mb-3 flex-wrap">
             <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Tool:</span>
             <button
               onClick={() => setSelectedTool('pen')}
@@ -343,6 +381,17 @@ const AutoPathCanvas: React.FC<AutoPathCanvasProps> = ({ onSave, onClose, initia
             >
               <Circle className="w-4 h-4" />
               Dot
+            </button>
+            <button
+              onClick={() => setSelectedTool('eraser')}
+              className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                selectedTool === 'eraser'
+                  ? 'bg-red-600 text-white'
+                  : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+              }`}
+            >
+              <Eraser className="w-4 h-4" />
+              Erase
             </button>
           </div>
           
@@ -371,7 +420,7 @@ const AutoPathCanvas: React.FC<AutoPathCanvasProps> = ({ onSave, onClose, initia
               ref={canvasRef}
               width={CANVAS_SIZE}
               height={CANVAS_SIZE}
-              className="w-full border-2 border-gray-300 dark:border-gray-600 rounded-lg cursor-crosshair touch-none"
+              className={`w-full border-2 border-gray-300 dark:border-gray-600 rounded-lg touch-none ${selectedTool === 'eraser' ? 'cursor-pointer' : 'cursor-crosshair'}`}
               onMouseDown={startDrawing}
               onMouseMove={draw}
               onMouseUp={stopDrawing}
@@ -398,7 +447,9 @@ const AutoPathCanvas: React.FC<AutoPathCanvasProps> = ({ onSave, onClose, initia
             <p className="text-sm text-blue-900 dark:text-blue-200">
               {selectedTool === 'pen' 
                 ? '🖊️ Draw lines to show the robot path. Use different colors for different actions!'
-                : '📍 Tap to place markers for key positions like scoring locations.'}
+                : selectedTool === 'dot'
+                ? '📍 Tap to place markers for key positions like scoring locations.'
+                : '🧹 Tap or drag over lines/dots to erase them.'}
             </p>
           </div>
         </div>

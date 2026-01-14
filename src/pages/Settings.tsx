@@ -2,7 +2,7 @@ import React, { useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
-import { LogOut, Moon, Sun, User, Database, Info, Download, Upload, FileJson, FileSpreadsheet, FileText, TrendingUp, Target, Users } from 'lucide-react';
+import { LogOut, Moon, Sun, User, Database, Info, Download, Upload, FileJson, FileSpreadsheet, FileText, TrendingUp, Target, Users, Settings as SettingsIcon, Sparkles, Shield } from 'lucide-react';
 import { exportDataAsJSON, exportDataAsCSV, exportDataAsWord, importDataFromJSON, getScoutingEntries, getEntriesByUser, exportUserDataAsJSON, exportUserDataAsCSV, exportUserDataAsWord, getUserStats } from '../utils/storage';
 
 const Settings: React.FC = () => {
@@ -77,43 +77,57 @@ const Settings: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pb-20">
       {/* Header */}
-      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
-        <div className="px-4 py-4">
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Settings</h1>
+      <div className="bg-gradient-to-br from-gray-800 via-gray-900 to-gray-800 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 text-white">
+        <div className="px-4 pt-6 pb-8">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="w-10 h-10 bg-white/10 backdrop-blur-sm rounded-xl flex items-center justify-center">
+              <SettingsIcon className="w-5 h-5" />
+            </div>
+            <h1 className="text-2xl font-bold">Settings</h1>
+          </div>
         </div>
       </div>
 
-      <div className="px-4 py-6 space-y-4">
+      <div className="px-4 -mt-4 space-y-4 pb-4">
         {/* User Info */}
-        <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg border border-gray-100 dark:border-gray-700">
           <div className="flex items-center gap-4 mb-4">
-            <div className="w-16 h-16 bg-primary-100 dark:bg-primary-900/30 rounded-full flex items-center justify-center">
-              <User className="w-8 h-8 text-primary-600 dark:text-primary-400" />
+            <div className="w-16 h-16 bg-gradient-to-br from-primary-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg">
+              <User className="w-8 h-8 text-white" />
             </div>
-            <div>
-              <p className="text-lg font-semibold text-gray-900 dark:text-white">{user?.username}</p>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Scout Account • {myEntryCount} entries</p>
+            <div className="flex-1">
+              <p className="text-lg font-bold text-gray-900 dark:text-white">{user?.username}</p>
+              <div className="flex items-center gap-2 mt-1">
+                <Shield className="w-3.5 h-3.5 text-primary-500" />
+                <p className="text-sm text-gray-500 dark:text-gray-400">Scout Account</p>
+              </div>
+            </div>
+            <div className="text-right">
+              <div className="bg-primary-50 dark:bg-primary-900/30 rounded-full px-3 py-1 flex items-center gap-1.5">
+                <Sparkles className="w-4 h-4 text-primary-600 dark:text-primary-400" />
+                <span className="text-sm font-semibold text-primary-700 dark:text-primary-300">{myEntryCount}</span>
+              </div>
             </div>
           </div>
         </div>
 
         {/* My Stats */}
         {myStats && myStats.totalEntries > 0 && (
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm overflow-hidden">
-            <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex items-center gap-2">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg overflow-hidden border border-gray-100 dark:border-gray-700">
+            <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex items-center gap-2 bg-gradient-to-r from-primary-50 to-purple-50 dark:from-primary-900/20 dark:to-purple-900/20">
               <TrendingUp className="w-5 h-5 text-primary-600 dark:text-primary-400" />
               <h2 className="text-lg font-semibold text-gray-900 dark:text-white">My Statistics</h2>
             </div>
             <div className="p-4">
               {/* Quick Stats */}
               <div className="grid grid-cols-2 gap-3 mb-4">
-                <div className="bg-primary-50 dark:bg-primary-900/20 rounded-lg p-3 text-center">
+                <div className="bg-gradient-to-br from-primary-50 to-primary-100 dark:from-primary-900/30 dark:to-primary-900/10 rounded-xl p-3 text-center">
                   <p className="text-2xl font-bold text-primary-600 dark:text-primary-400">{myStats.totalEntries}</p>
-                  <p className="text-xs text-primary-700 dark:text-primary-300">Entries Scouted</p>
+                  <p className="text-xs text-primary-700 dark:text-primary-300 font-medium">Entries Scouted</p>
                 </div>
-                <div className="bg-green-50 dark:bg-green-900/20 rounded-lg p-3 text-center">
+                <div className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/30 dark:to-green-900/10 rounded-xl p-3 text-center">
                   <p className="text-2xl font-bold text-green-600 dark:text-green-400">{myStats.uniqueTeams}</p>
-                  <p className="text-xs text-green-700 dark:text-green-300">Unique Teams</p>
+                  <p className="text-xs text-green-700 dark:text-green-300 font-medium">Unique Teams</p>
                 </div>
               </div>
               

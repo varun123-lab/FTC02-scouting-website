@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { BarChart3, TrendingUp, Search, ChevronDown, ChevronUp, Trophy, Target, Zap, Shield } from 'lucide-react';
+import { BarChart3, TrendingUp, Search, ChevronDown, ChevronUp, Trophy, Target, Zap, Shield, Award } from 'lucide-react';
 import { getEntriesByUser } from '../utils/storage';
 import { useAuth } from '../contexts/AuthContext';
 import { ScoutingEntry } from '../types';
@@ -141,16 +141,42 @@ const Analytics: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pb-20">
       {/* Header */}
-      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-10">
-        <div className="px-4 py-4">
+      <div className="bg-gradient-to-br from-indigo-600 via-purple-600 to-purple-700 text-white">
+        <div className="px-4 pt-6 pb-8">
           <div className="flex items-center gap-3 mb-2">
-            <BarChart3 className="w-7 h-7 text-primary-600 dark:text-primary-400" />
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Team Averages</h1>
+            <div className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
+              <BarChart3 className="w-5 h-5" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold">Team Analytics</h1>
+              <p className="text-sm text-white/80">
+                Comparing {teamStats.length} teams
+              </p>
+            </div>
           </div>
-          <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-            Performance statistics across {teamStats.length} teams
-          </p>
 
+          {/* Top Team Highlight */}
+          {filteredTeams.length > 0 && (
+            <div className="mt-4 bg-white/15 backdrop-blur-sm rounded-xl p-3 flex items-center gap-3">
+              <div className="w-10 h-10 bg-yellow-400/20 rounded-lg flex items-center justify-center">
+                <Award className="w-5 h-5 text-yellow-300" />
+              </div>
+              <div className="flex-1">
+                <p className="text-xs text-white/70">Top Performing Team</p>
+                <p className="font-bold">Team {filteredTeams[0]?.teamNumber}</p>
+              </div>
+              <div className="text-right">
+                <p className="text-2xl font-bold">{filteredTeams[0]?.avgTotalScore}</p>
+                <p className="text-xs text-white/70">avg pts</p>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Search and Filters */}
+      <div className="px-4 -mt-4 mb-4">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-4 border border-gray-100 dark:border-gray-700">
           {/* Search */}
           <div className="relative mb-3">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
@@ -159,7 +185,7 @@ const Analytics: React.FC = () => {
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder="Search by team number..."
-              className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500"
+              className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all"
             />
           </div>
 
@@ -188,12 +214,19 @@ const Analytics: React.FC = () => {
       </div>
 
       {/* Content */}
-      <div className="px-4 py-4 space-y-3">
+      <div className="px-4 space-y-3">
         {filteredTeams.length === 0 ? (
-          <div className="text-center py-12">
-            <TrendingUp className="w-16 h-16 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
-            <p className="text-gray-500 dark:text-gray-400">
-              {myEntries.length === 0 ? 'No scouting data yet' : 'No teams match your search'}
+          <div className="text-center py-16 px-4">
+            <div className="w-20 h-20 bg-purple-100 dark:bg-purple-900/30 rounded-full flex items-center justify-center mx-auto mb-6">
+              <TrendingUp className="w-10 h-10 text-purple-600 dark:text-purple-400" />
+            </div>
+            <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
+              {myEntries.length === 0 ? 'No Data Yet' : 'No Results'}
+            </h3>
+            <p className="text-gray-500 dark:text-gray-400 max-w-xs mx-auto">
+              {myEntries.length === 0 
+                ? 'Start scouting teams to see analytics and performance comparisons'
+                : `No teams match "${searchTerm}"`}
             </p>
           </div>
         ) : (

@@ -4,7 +4,8 @@ import { useAuth } from '../contexts/AuthContext';
 import { ScoutingEntry } from '../types';
 import { calculateScores } from '../utils/scoring';
 import { saveScoutingEntry } from '../utils/storage';
-import { Save, ArrowLeft, Pencil, Plus, Minus, ChevronDown, ChevronUp } from 'lucide-react';
+import { addScoutingEntry, isFirebaseConfigured } from '../services/firebaseService';
+import { Save, ArrowLeft, Pencil, Plus, Minus, ChevronDown, ChevronUp, ClipboardCheck, Zap } from 'lucide-react';
 import AutoPathCanvas from '../components/AutoPathCanvas';
 
 type StartPosition = 'blue-classifier' | 'blue-launch' | 'red-classifier' | 'red-launch';
@@ -112,7 +113,7 @@ const ScoutingForm: React.FC = () => {
     </div>
   );
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
 
@@ -122,8 +123,7 @@ const ScoutingForm: React.FC = () => {
       endgame: formData.endgame,
     });
 
-    const entry: ScoutingEntry = {
-      id: Date.now().toString(),
+    const entryData = {
       userId: user.id,
       username: user.username,
       teamNumber: formData.teamNumber,
@@ -158,7 +158,17 @@ const ScoutingForm: React.FC = () => {
       reliability: formData.reliability,
     };
 
-    saveScoutingEntry(entry);
+    // Save to Firebase if configured, otherwise use local storage
+    if (isFirebaseConfigured()) {
+      await addScoutingEntry(entryData);
+    } else {
+      const entry: ScoutingEntry = {
+        id: Date.now().toString(),
+        ...entryData,
+      };
+      saveScoutingEntry(entry);
+    }
+    
     navigate('/dashboard');
   };
 
@@ -169,46 +179,54 @@ const ScoutingForm: React.FC = () => {
   });
 
   return (
-    <div className="max-w-lg mx-auto pb-24">
-      <div className="sticky top-0 bg-white dark:bg-gray-800 z-10 px-4 py-3 border-b border-gray-200 dark:border-gray-700">
+    <div className="max-w-lg mx-auto pb-24 bg-gray-50 dark:bg-gray-900 min-h-screen">
+      {/* Header */}
+      <div className="sticky top-0 bg-gradient-to-r from-primary-600 to-purple-600 z-10 px-4 py-4 shadow-lg">
         <div className="flex items-center justify-between">
-          <button onClick={() => navigate('/dashboard')} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg">
-            <ArrowLeft size={24} className="dark:text-white" />
+          <button onClick={() => navigate('/dashboard')} className="p-2 hover:bg-white/20 rounded-xl transition-colors">
+            <ArrowLeft size={24} className="text-white" />
           </button>
-          <h1 className="text-xl font-bold dark:text-white">New Scout Entry</h1>
+          <div className="flex items-center gap-2">
+            <ClipboardCheck className="w-5 h-5 text-white" />
+            <h1 className="text-xl font-bold text-white">New Entry</h1>
+          </div>
           <div className="w-10" />
         </div>
         <div className="mt-3 grid grid-cols-4 gap-2 text-center">
-          <div className="bg-blue-100 dark:bg-blue-900 rounded-lg p-2">
-            <div className="text-xs text-blue-600 dark:text-blue-300">Auto</div>
-            <div className="text-lg font-bold text-blue-700 dark:text-blue-200">{liveScores.autoScore}</div>
+          <div className="bg-white/15 backdrop-blur-sm rounded-xl p-2">
+            <div className="text-xs text-white/80">Auto</div>
+            <div className="text-lg font-bold text-white">{liveScores.autoScore}</div>
           </div>
-          <div className="bg-green-100 dark:bg-green-900 rounded-lg p-2">
-            <div className="text-xs text-green-600 dark:text-green-300">Teleop</div>
-            <div className="text-lg font-bold text-green-700 dark:text-green-200">{liveScores.teleopScore}</div>
+          <div className="bg-white/15 backdrop-blur-sm rounded-xl p-2">
+            <div className="text-xs text-white/80">Teleop</div>
+            <div className="text-lg font-bold text-white">{liveScores.teleopScore}</div>
           </div>
-          <div className="bg-purple-100 dark:bg-purple-900 rounded-lg p-2">
-            <div className="text-xs text-purple-600 dark:text-purple-300">Endgame</div>
-            <div className="text-lg font-bold text-purple-700 dark:text-purple-200">{liveScores.endgameScore}</div>
+          <div className="bg-white/15 backdrop-blur-sm rounded-xl p-2">
+            <div className="text-xs text-white/80">Endgame</div>
+            <div className="text-lg font-bold text-white">{liveScores.endgameScore}</div>
           </div>
-          <div className="bg-gray-100 dark:bg-gray-700 rounded-lg p-2">
-            <div className="text-xs text-gray-600 dark:text-gray-300">Total</div>
-            <div className="text-lg font-bold text-gray-700 dark:text-gray-200">{liveScores.totalScore}</div>
+          <div className="bg-white/25 backdrop-blur-sm rounded-xl p-2">
+            <div className="text-xs text-white/80 flex items-center justify-center gap-1">
+              <Zap className="w-3 h-3" /> Total
+            </div>
+            <div className="text-lg font-bold text-white">{liveScores.totalScore}</div>
           </div>
         </div>
       </div>
 
       <form onSubmit={handleSubmit} className="p-4 space-y-4">
-        <div className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm border border-gray-200 dark:border-gray-700">
-          <h2 className="text-lg font-semibold mb-4 dark:text-white">Match Information</h2>
+        <div className="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-lg border border-gray-100 dark:border-gray-700">
+          <h2 className="text-lg font-semibold mb-4 dark:text-white flex items-center gap-2">
+            📋 Match Information
+          </h2>
           <div className="grid grid-cols-2 gap-4 mb-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Team Number *</label>
-              <input type="text" required value={formData.teamNumber} onChange={(e) => setFormData({ ...formData, teamNumber: e.target.value })} className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white" placeholder="e.g., 12345" />
+              <input type="text" required value={formData.teamNumber} onChange={(e) => setFormData({ ...formData, teamNumber: e.target.value })} className="w-full px-3 py-2.5 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white transition-all" placeholder="e.g., 12345" />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Match Number *</label>
-              <input type="text" required value={formData.matchNumber} onChange={(e) => setFormData({ ...formData, matchNumber: e.target.value })} className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white" placeholder="e.g., Q5" />
+              <input type="text" required value={formData.matchNumber} onChange={(e) => setFormData({ ...formData, matchNumber: e.target.value })} className="w-full px-3 py-2.5 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white transition-all" placeholder="e.g., Q5" />
             </div>
           </div>
           <div>
@@ -220,8 +238,8 @@ const ScoutingForm: React.FC = () => {
           </div>
         </div>
 
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
-          <button type="button" onClick={() => toggleSection('auto')} className="w-full px-4 py-3 flex items-center justify-between bg-blue-50 dark:bg-blue-900/30">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-100 dark:border-gray-700 overflow-hidden">
+          <button type="button" onClick={() => toggleSection('auto')} className="w-full px-4 py-3 flex items-center justify-between bg-gradient-to-r from-blue-50 to-blue-100 dark:from-blue-900/30 dark:to-blue-900/20">
             <h2 className="text-lg font-semibold text-blue-700 dark:text-blue-300">🤖 Autonomous Phase</h2>
             {expandedSections.auto ? <ChevronUp size={20} className="text-blue-700 dark:text-blue-300" /> : <ChevronDown size={20} className="text-blue-700 dark:text-blue-300" />}
           </button>
@@ -235,9 +253,9 @@ const ScoutingForm: React.FC = () => {
                       <button
                         type="button"
                         onClick={() => setFormData({ ...formData, auto: { ...formData.auto, startPosition: 'blue-classifier' } })}
-                        className={`py-3 rounded-lg font-medium transition-colors flex items-center justify-center gap-2 ${
+                        className={`py-3 rounded-xl font-medium transition-all flex items-center justify-center gap-2 ${
                           formData.auto.startPosition === 'blue-classifier'
-                            ? 'bg-blue-500 text-white'
+                            ? 'bg-blue-500 text-white shadow-lg shadow-blue-500/30'
                             : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
                         }`}
                       >
@@ -246,9 +264,9 @@ const ScoutingForm: React.FC = () => {
                       <button
                         type="button"
                         onClick={() => setFormData({ ...formData, auto: { ...formData.auto, startPosition: 'blue-launch' } })}
-                        className={`py-3 rounded-lg font-medium transition-colors flex items-center justify-center gap-2 ${
+                        className={`py-3 rounded-xl font-medium transition-all flex items-center justify-center gap-2 ${
                           formData.auto.startPosition === 'blue-launch'
-                            ? 'bg-blue-500 text-white'
+                            ? 'bg-blue-500 text-white shadow-lg shadow-blue-500/30'
                             : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
                         }`}
                       >
@@ -260,9 +278,9 @@ const ScoutingForm: React.FC = () => {
                       <button
                         type="button"
                         onClick={() => setFormData({ ...formData, auto: { ...formData.auto, startPosition: 'red-classifier' } })}
-                        className={`py-3 rounded-lg font-medium transition-colors flex items-center justify-center gap-2 ${
+                        className={`py-3 rounded-xl font-medium transition-all flex items-center justify-center gap-2 ${
                           formData.auto.startPosition === 'red-classifier'
-                            ? 'bg-red-500 text-white'
+                            ? 'bg-red-500 text-white shadow-lg shadow-red-500/30'
                             : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
                         }`}
                       >

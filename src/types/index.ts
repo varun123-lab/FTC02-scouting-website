@@ -4,7 +4,7 @@
 export interface User {
   id: string;
   username: string;
-  password: string; // In production, this should be hashed
+  password?: string; // Optional - not used with Firebase auth
   createdAt: string;
 }
 

@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { ClipboardList, Cpu, Target, Trophy, Zap } from 'lucide-react';
+import { ClipboardList, Cpu, Target, Trophy, Zap, Cloud, Smartphone } from 'lucide-react';
 
 const AuthPage: React.FC = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -11,8 +11,15 @@ const AuthPage: React.FC = () => {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  const { login, register } = useAuth();
+  const { login, register, isCloudMode, authError } = useAuth();
   const navigate = useNavigate();
+
+  // Sync auth error from context
+  useEffect(() => {
+    if (authError) {
+      setError(authError);
+    }
+  }, [authError]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -31,18 +38,18 @@ const AuthPage: React.FC = () => {
       return;
     }
 
+    if (isCloudMode && !isLogin && password.length < 6) {
+      setError('Password must be at least 6 characters');
+      setIsLoading(false);
+      return;
+    }
+
     try {
       let success: boolean;
       if (isLogin) {
         success = await login(username, password);
-        if (!success) {
-          setError('Invalid username or password');
-        }
       } else {
         success = await register(username, password);
-        if (!success) {
-          setError('Username already exists');
-        }
       }
 
       if (success) {
@@ -128,22 +135,22 @@ const AuthPage: React.FC = () => {
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <label htmlFor="username" className="block text-sm font-medium text-blue-200 mb-2">
-                  Username
+                  {isCloudMode ? 'Email' : 'Username'}
                 </label>
                 <input
                   id="username"
-                  type="text"
+                  type={isCloudMode ? 'email' : 'text'}
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   className="w-full px-4 py-3 rounded-xl border border-white/20 bg-white/10 text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all backdrop-blur-sm"
-                  placeholder="Enter your username"
-                  autoComplete="username"
+                  placeholder={isCloudMode ? 'Enter your email' : 'Enter your username'}
+                  autoComplete={isCloudMode ? 'email' : 'username'}
                 />
               </div>
 
               <div>
                 <label htmlFor="password" className="block text-sm font-medium text-blue-200 mb-2">
-                  Password
+                  Password {isCloudMode && !isLogin && <span className="text-xs text-blue-300/70">(min 6 characters)</span>}
                 </label>
                 <input
                   id="password"
@@ -197,9 +204,19 @@ const AuthPage: React.FC = () => {
             </form>
 
             <div className="mt-6 text-center">
-              <p className="text-sm text-blue-200/70">
-                🔒 Data stored securely on your device
-              </p>
+              <div className="flex items-center justify-center gap-2 text-sm text-blue-200/70">
+                {isCloudMode ? (
+                  <>
+                    <Cloud className="w-4 h-4" />
+                    <span>☁️ Cloud sync enabled - data shared across all devices</span>
+                  </>
+                ) : (
+                  <>
+                    <Smartphone className="w-4 h-4" />
+                    <span>🔒 Local mode - data stored on this device only</span>
+                  </>
+                )}
+              </div>
             </div>
           </div>
 

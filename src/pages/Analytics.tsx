@@ -1,8 +1,11 @@
 import React, { useState, useMemo } from 'react';
-import { BarChart3, TrendingUp, Search, ChevronDown, ChevronUp, Trophy, Target, Zap, Shield, Award } from 'lucide-react';
+import { BarChart3, TrendingUp, Search, ChevronDown, ChevronUp, Trophy, Target, Zap, Shield, Award, Sparkles } from 'lucide-react';
 import { getEntriesByUser } from '../utils/storage';
 import { useAuth } from '../contexts/AuthContext';
 import { ScoutingEntry } from '../types';
+import AIInsights from '../components/AIInsights';
+import AITeamComparison from '../components/AITeamComparison';
+import AIMatchPredictor from '../components/AIMatchPredictor';
 
 interface TeamStats {
   teamNumber: string;
@@ -241,6 +244,20 @@ const Analytics: React.FC = () => {
           ))
         )}
       </div>
+
+      {/* AI Section */}
+      {myEntries.length > 0 && (
+        <div className="px-4 mt-6 space-y-4">
+          <div className="flex items-center gap-2 mb-2">
+            <Sparkles className="w-5 h-5 text-primary-600 dark:text-primary-400" />
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">AI Tools</h2>
+          </div>
+          
+          <AIInsights entries={myEntries} />
+          <AITeamComparison entries={myEntries} />
+          <AIMatchPredictor entries={myEntries} />
+        </div>
+      )}
     </div>
   );
 };

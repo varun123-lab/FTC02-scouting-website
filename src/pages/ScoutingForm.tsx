@@ -4,7 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { ScoutingEntry } from '../types';
 import { calculateScores } from '../utils/scoring';
 import { saveScoutingEntry } from '../utils/storage';
-import { addScoutingEntry, isFirebaseConfigured } from '../services/firebaseService';
+import { addScoutingEntry, isFirebaseConfigured } from '../services/apiClient';
 import { Save, ArrowLeft, Pencil, Plus, Minus, ChevronDown, ChevronUp, ClipboardCheck, Zap } from 'lucide-react';
 import AutoPathCanvas from '../components/AutoPathCanvas';
 

@@ -2,7 +2,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { getEntriesByUser, getScoutingEntries } from '../utils/storage';
-import { subscribeToAllEntries, subscribeToUserEntries, isFirebaseConfigured } from '../services/firebaseService';
+import { subscribeToAllEntries, subscribeToUserEntries, isFirebaseConfigured } from '../services/apiClient';
 import { ScoutingEntry } from '../types';
 import { Search, Plus, Trophy, TrendingUp, Target, Zap, Sparkles, ClipboardList, ChevronRight, Users, User, Cloud, RefreshCw } from 'lucide-react';
 

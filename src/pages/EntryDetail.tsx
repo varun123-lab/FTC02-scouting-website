@@ -1,10 +1,13 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getScoutingEntries, deleteScoutingEntry } from '../utils/storage';
-import { deleteScoutingEntryFirebase, getScoutingEntryById, isFirebaseConfigured } from '../services/firebaseService';
+import { deleteScoutingEntryFirebase, getScoutingEntryById, isFirebaseConfigured } from '../services/apiClient';
 import { useAuth } from '../contexts/AuthContext';
 import { ArrowLeft, MapPin, Zap, Shield, Route, Trash2, RefreshCw } from 'lucide-react';
 import { ScoutingEntry } from '../types';
+import AISummary from '../components/AISummary';
+import TeamHistory from '../components/TeamHistory';
+import AIChat from '../components/AIChat';
 
 const EntryDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -277,6 +280,15 @@ const EntryDetail: React.FC = () => {
             <p className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap">{entry.notes}</p>
           </div>
         )}
+
+        {/* AI Summary */}
+        <AISummary entry={entry} />
+
+        {/* Team History (FTC Events API) */}
+        <TeamHistory teamNumber={entry.teamNumber} />
+
+        {/* AI Chat (contextual chat about this entry/team) */}
+        <AIChat entry={entry} />
 
         {/* Timestamp */}
         <div className="text-center text-sm text-gray-500 dark:text-gray-400">

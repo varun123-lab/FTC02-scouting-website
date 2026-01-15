@@ -8,7 +8,7 @@ import {
   onAuthChange,
   getFirebaseUserData,
   isFirebaseConfigured 
-} from '../services/firebaseService';
+} from '../services/apiClient';
 
 interface AuthContextType {
   user: User | null;

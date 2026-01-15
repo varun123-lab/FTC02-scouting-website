@@ -198,7 +198,7 @@ const Settings: React.FC = () => {
           <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
             <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Data</h2>
           </div>
-          <div className="px-6 py-4 space-y-4">
+          <div className="px-6 py-5 space-y-5">
             <div className="flex items-start gap-3">
               <Database className="w-5 h-5 text-gray-600 dark:text-gray-400 mt-0.5" />
               <div>
@@ -210,65 +210,65 @@ const Settings: React.FC = () => {
             </div>
             
             {/* Export Options */}
-            <div className="pt-2 border-t border-gray-200 dark:border-gray-700">
-              <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3 flex items-center gap-2">
-                <Download className="w-4 h-4" /> Export My Entries Only
+            <div className="pt-3 border-t border-gray-200 dark:border-gray-700">
+              <p className="text-base font-medium text-gray-700 dark:text-gray-300 mb-4 flex items-center gap-2">
+                <Download className="w-5 h-5" /> Export My Entries Only
               </p>
-              <div className="grid grid-cols-3 gap-2 mb-4">
+              <div className="grid grid-cols-3 gap-3 mb-5">
                 <button
                   onClick={handleExportMyWord}
-                  className="flex items-center justify-center gap-2 px-3 py-3 bg-indigo-50 dark:bg-indigo-900/20 hover:bg-indigo-100 dark:hover:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400 rounded-lg font-medium transition-colors border border-indigo-200 dark:border-indigo-800"
+                  className="flex flex-col items-center justify-center gap-1.5 px-3 py-4 bg-indigo-50 dark:bg-indigo-900/20 hover:bg-indigo-100 dark:hover:bg-indigo-900/30 active:scale-95 text-indigo-700 dark:text-indigo-400 rounded-xl font-semibold transition-all border border-indigo-200 dark:border-indigo-800"
                 >
-                  <FileText className="w-5 h-5" />
-                  Word
+                  <FileText className="w-6 h-6" />
+                  <span>Word</span>
                 </button>
                 <button
                   onClick={handleExportMyCSV}
-                  className="flex items-center justify-center gap-2 px-3 py-3 bg-primary-50 dark:bg-primary-900/20 hover:bg-primary-100 dark:hover:bg-primary-900/30 text-primary-700 dark:text-primary-400 rounded-lg font-medium transition-colors border border-primary-200 dark:border-primary-800"
+                  className="flex flex-col items-center justify-center gap-1.5 px-3 py-4 bg-primary-50 dark:bg-primary-900/20 hover:bg-primary-100 dark:hover:bg-primary-900/30 active:scale-95 text-primary-700 dark:text-primary-400 rounded-xl font-semibold transition-all border border-primary-200 dark:border-primary-800"
                 >
-                  <FileSpreadsheet className="w-5 h-5" />
-                  CSV
+                  <FileSpreadsheet className="w-6 h-6" />
+                  <span>CSV</span>
                 </button>
                 <button
                   onClick={handleExportMyJSON}
-                  className="flex items-center justify-center gap-2 px-3 py-3 bg-primary-50 dark:bg-primary-900/20 hover:bg-primary-100 dark:hover:bg-primary-900/30 text-primary-700 dark:text-primary-400 rounded-lg font-medium transition-colors border border-primary-200 dark:border-primary-800"
+                  className="flex flex-col items-center justify-center gap-1.5 px-3 py-4 bg-primary-50 dark:bg-primary-900/20 hover:bg-primary-100 dark:hover:bg-primary-900/30 active:scale-95 text-primary-700 dark:text-primary-400 rounded-xl font-semibold transition-all border border-primary-200 dark:border-primary-800"
                 >
-                  <FileJson className="w-5 h-5" />
-                  JSON
+                  <FileJson className="w-6 h-6" />
+                  <span>JSON</span>
                 </button>
               </div>
-              <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3 flex items-center gap-2">
-                <Users className="w-4 h-4" /> Export All Entries
+              <p className="text-base font-medium text-gray-700 dark:text-gray-300 mb-4 flex items-center gap-2">
+                <Users className="w-5 h-5" /> Export All Entries
               </p>
-              <div className="grid grid-cols-3 gap-2">
+              <div className="grid grid-cols-3 gap-3">
                 <button
                   onClick={handleExportWord}
-                  className="flex items-center justify-center gap-2 px-3 py-3 bg-indigo-50 dark:bg-indigo-900/20 hover:bg-indigo-100 dark:hover:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400 rounded-lg font-medium transition-colors border border-indigo-200 dark:border-indigo-800"
+                  className="flex flex-col items-center justify-center gap-1.5 px-3 py-4 bg-indigo-50 dark:bg-indigo-900/20 hover:bg-indigo-100 dark:hover:bg-indigo-900/30 active:scale-95 text-indigo-700 dark:text-indigo-400 rounded-xl font-semibold transition-all border border-indigo-200 dark:border-indigo-800"
                 >
-                  <FileText className="w-5 h-5" />
-                  Word
+                  <FileText className="w-6 h-6" />
+                  <span>Word</span>
                 </button>
                 <button
                   onClick={handleExportCSV}
-                  className="flex items-center justify-center gap-2 px-3 py-3 bg-green-50 dark:bg-green-900/20 hover:bg-green-100 dark:hover:bg-green-900/30 text-green-700 dark:text-green-400 rounded-lg font-medium transition-colors border border-green-200 dark:border-green-800"
+                  className="flex flex-col items-center justify-center gap-1.5 px-3 py-4 bg-green-50 dark:bg-green-900/20 hover:bg-green-100 dark:hover:bg-green-900/30 active:scale-95 text-green-700 dark:text-green-400 rounded-xl font-semibold transition-all border border-green-200 dark:border-green-800"
                 >
-                  <FileSpreadsheet className="w-5 h-5" />
-                  CSV
+                  <FileSpreadsheet className="w-6 h-6" />
+                  <span>CSV</span>
                 </button>
                 <button
                   onClick={handleExportJSON}
-                  className="flex items-center justify-center gap-2 px-3 py-3 bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/30 text-blue-700 dark:text-blue-400 rounded-lg font-medium transition-colors border border-blue-200 dark:border-blue-800"
+                  className="flex flex-col items-center justify-center gap-1.5 px-3 py-4 bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/30 active:scale-95 text-blue-700 dark:text-blue-400 rounded-xl font-semibold transition-all border border-blue-200 dark:border-blue-800"
                 >
-                  <FileJson className="w-5 h-5" />
-                  JSON
+                  <FileJson className="w-6 h-6" />
+                  <span>JSON</span>
                 </button>
               </div>
             </div>
 
             {/* Import Option */}
-            <div className="pt-2 border-t border-gray-200 dark:border-gray-700">
-              <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3 flex items-center gap-2">
-                <Upload className="w-4 h-4" /> Import Data
+            <div className="pt-3 border-t border-gray-200 dark:border-gray-700">
+              <p className="text-base font-medium text-gray-700 dark:text-gray-300 mb-4 flex items-center gap-2">
+                <Upload className="w-5 h-5" /> Import Data
               </p>
               <input
                 ref={fileInputRef}
@@ -279,13 +279,13 @@ const Settings: React.FC = () => {
               />
               <button
                 onClick={handleImportClick}
-                className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-purple-50 dark:bg-purple-900/20 hover:bg-purple-100 dark:hover:bg-purple-900/30 text-purple-700 dark:text-purple-400 rounded-lg font-medium transition-colors border border-purple-200 dark:border-purple-800"
+                className="w-full flex items-center justify-center gap-3 px-4 py-4 bg-purple-50 dark:bg-purple-900/20 hover:bg-purple-100 dark:hover:bg-purple-900/30 active:scale-[0.98] text-purple-700 dark:text-purple-400 rounded-xl font-semibold text-lg transition-all border border-purple-200 dark:border-purple-800"
               >
-                <Upload className="w-5 h-5" />
+                <Upload className="w-6 h-6" />
                 Import JSON File
               </button>
               {importStatus && (
-                <p className={`mt-2 text-sm text-center ${importStatus.includes('Successfully') ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+                <p className={`mt-3 text-base text-center ${importStatus.includes('Successfully') ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
                   {importStatus}
                 </p>
               )}

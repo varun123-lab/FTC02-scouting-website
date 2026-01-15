@@ -8,6 +8,24 @@
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  /* Smooth color transitions for theme switching */
+  --transition-speed: 0.2s;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  font-size: 16px;
+  scroll-behavior: smooth;
+}
+
+/* Larger base font on desktop */
+@media (min-width: 768px) {
+  html {
+    font-size: 17px;
+  }
 }
 
 body {
@@ -16,6 +34,8 @@ body {
   min-height: 100vh;
   min-height: -webkit-fill-available;
   overflow-x: hidden;
+  line-height: 1.5;
+  transition: background-color var(--transition-speed) ease, color var(--transition-speed) ease;
 }
 
 #root {
@@ -24,9 +44,22 @@ body {
 }
 
 /* Touch optimizations */
-button, a {
+button, a, [role="button"] {
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
+  cursor: pointer;
+}
+
+/* Minimum touch target size for accessibility */
+button, .btn, [role="button"] {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+/* Better focus states for accessibility */
+button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
 }
 
 /* Prevent bounce scrolling on iOS */
@@ -134,6 +167,22 @@ html {
   box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.2);
 }
 
+/* Smooth transitions for all interactive elements */
+.transition-smooth {
+  transition: all 0.2s ease;
+}
+
+/* Better spacing utility */
+.section-gap {
+  margin-bottom: 1.5rem;
+}
+
+@media (min-width: 768px) {
+  .section-gap {
+    margin-bottom: 2rem;
+  }
+}
+
 /* Button press effect */
 .btn-press {
   transition: transform 0.1s ease;
@@ -141,6 +190,31 @@ html {
 
 .btn-press:active {
   transform: scale(0.97);
+}
+
+/* Primary button style */
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.875rem 1.5rem;
+  background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+  color: white;
+  font-weight: 600;
+  border-radius: 0.75rem;
+  border: none;
+  box-shadow: 0 4px 14px 0 rgba(59, 130, 246, 0.4);
+  transition: all 0.2s ease;
+}
+
+.btn-primary:hover {
+  box-shadow: 0 6px 20px 0 rgba(59, 130, 246, 0.5);
+  transform: translateY(-1px);
+}
+
+.btn-primary:active {
+  transform: scale(0.98);
 }
 
 /* Score pill styles */
@@ -174,7 +248,22 @@ html {
 /* Input focus ring */
 input:focus, select:focus, textarea:focus {
   outline: none;
-  box-shadow: 0 0 0 2px #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
+  border-color: #3b82f6;
+}
+
+/* Larger, more accessible inputs */
+input, select, textarea {
+  font-size: 16px; /* Prevents iOS zoom on focus */
+  min-height: 48px;
+  padding: 0.75rem 1rem;
+  border-radius: 0.75rem;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+textarea {
+  min-height: 100px;
+  resize: vertical;
 }
 
 /* Number input hide arrows */

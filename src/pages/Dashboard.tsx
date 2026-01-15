@@ -165,46 +165,46 @@ const Dashboard: React.FC = () => {
       <div className="px-4 -mt-4">
         <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-4 border border-gray-100 dark:border-gray-700">
           {/* View Mode Toggle */}
-          <div className="flex gap-2 mb-3">
+          <div className="flex gap-2 mb-4">
             <button
               onClick={() => setViewMode('my')}
-              className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl font-medium text-sm transition-all ${
+              className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl font-medium text-base transition-all ${
                 viewMode === 'my'
                   ? 'bg-primary-600 text-white shadow-lg shadow-primary-500/30'
                   : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
               }`}
             >
-              <User className="w-4 h-4" />
+              <User className="w-5 h-5" />
               My Entries
             </button>
             <button
               onClick={() => setViewMode('all')}
-              className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl font-medium text-sm transition-all ${
+              className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl font-medium text-base transition-all ${
                 viewMode === 'all'
                   ? 'bg-primary-600 text-white shadow-lg shadow-primary-500/30'
                   : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
               }`}
             >
-              <Users className="w-4 h-4" />
-              All Entries ({allEntries.length})
+              <Users className="w-5 h-5" />
+              All ({allEntries.length})
             </button>
           </div>
 
-          <div className="relative mb-3">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+          <div className="relative mb-4">
+            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
             <input
               type="text"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder={viewMode === 'all' ? "Search team, match, or scout..." : "Search team or match..."}
-              className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all"
+              className="w-full pl-12 pr-4 py-3 rounded-xl border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white text-base focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all"
             />
           </div>
 
           <select
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value as any)}
-            className="w-full px-3 py-2.5 rounded-xl border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white text-sm"
+            className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white text-base"
           >
             <option value="timestamp">📅 Recent First</option>
             <option value="teamNumber">🔢 Team Number</option>
@@ -270,12 +270,12 @@ const EntryCard: React.FC<EntryCardProps> = ({ entry, onClick, showScout = false
   return (
     <div
       onClick={onClick}
-      className="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-sm hover:shadow-lg transition-all duration-300 cursor-pointer border border-gray-100 dark:border-gray-700 hover:border-primary-300 dark:hover:border-primary-600 active:scale-[0.98] group"
+      className="bg-white dark:bg-gray-800 rounded-2xl p-5 shadow-sm hover:shadow-lg transition-all duration-300 cursor-pointer border border-gray-100 dark:border-gray-700 hover:border-primary-300 dark:hover:border-primary-600 active:scale-[0.98] group"
     >
-      <div className="flex items-start justify-between mb-3">
+      <div className="flex items-start justify-between mb-4">
         <div>
-          <div className="flex items-center gap-2 mb-1">
-            <h3 className="text-lg font-bold text-gray-900 dark:text-white group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">
+          <div className="flex items-center gap-2.5 mb-1.5">
+            <h3 className="text-xl font-bold text-gray-900 dark:text-white group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">
               Team {entry.teamNumber}
             </h3>
             <span className={`px-2.5 py-0.5 rounded-full text-xs font-semibold ${

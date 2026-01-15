@@ -151,6 +151,13 @@ const Dashboard: React.FC = () => {
               <p className="text-xs opacity-80">Best</p>
             </div>
           </div>
+          {isCloudMode && (
+            <div className="mt-4">
+              <div className="bg-yellow-50 dark:bg-yellow-900/20 rounded-xl p-3 text-sm text-yellow-800 dark:text-yellow-200">
+                <strong>Note:</strong> Entries saved in Cloud mode are visible to all authenticated users.
+              </div>
+            </div>
+          )}
         </div>
       </div>
 

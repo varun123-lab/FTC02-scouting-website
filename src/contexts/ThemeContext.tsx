@@ -21,19 +21,18 @@ interface ThemeProviderProps {
 }
 
 export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
-  const [theme, setTheme] = useState<'light' | 'dark'>('light');
-
-  useEffect(() => {
-    const savedTheme = getTheme();
-    setTheme(savedTheme);
-    updateThemeClass(savedTheme);
-  }, []);
+  const [theme, setTheme] = useState<'light' | 'dark'>(() => getTheme());
 
   const updateThemeClass = (newTheme: 'light' | 'dark') => {
     const root = window.document.documentElement;
     root.classList.remove('light', 'dark');
     root.classList.add(newTheme);
   };
+
+  useEffect(() => {
+    // Ensure the document class matches the current theme on mount/update
+    updateThemeClass(theme);
+  }, [theme]);
 
   const toggleTheme = () => {
     const newTheme = theme === 'light' ? 'dark' : 'light';

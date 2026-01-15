@@ -73,7 +73,7 @@ export const getEntriesByUser = (userId: string): any[] => {
 // Theme operations
 export const getTheme = (): 'light' | 'dark' => {
   const theme = localStorage.getItem(STORAGE_KEYS.THEME);
-  return (theme as 'light' | 'dark') || 'light';
+  return (theme as 'light' | 'dark') || 'dark';
 };
 
 export const setTheme = (theme: 'light' | 'dark'): void => {

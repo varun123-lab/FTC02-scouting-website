@@ -45,7 +45,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   useEffect(() => {
     if (isCloudMode) {
       // Firebase auth listener
-      const unsubscribe = onAuthChange(async (firebaseUser) => {
+      const unsubscribe = onAuthChange(async (firebaseUser: import('firebase/auth').User | null) => {
         if (firebaseUser) {
           const userData = await getFirebaseUserData(firebaseUser.uid);
           if (userData) {

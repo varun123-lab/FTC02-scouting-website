@@ -64,7 +64,7 @@ function localSummarize(entry: ScoutingEntry): string {
 
   // Suggestions
   const suggestions: string[] = [];
-  if (entry.patternMatches && entry.patternMatches < 3) suggestions.push('Work on motif/pattern alignment to increase pattern bonuses.');
+  if (entry.auto?.patternMatches && entry.auto.patternMatches < 3) suggestions.push('Work on motif/pattern alignment to increase pattern bonuses.');
   if (entry.teleop?.cyclesCompleted && entry.teleop.cyclesCompleted < 3) suggestions.push('Improve cycle efficiency to increase tele-op scoring.');
   if (entry.endgame?.baseFullRobots === 0) suggestions.push('Practice full-base returns for the +10 bonus.');
 
